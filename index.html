@@ -91,7 +91,6 @@
             background-color: #5856d6;
         }
 
-        /* Panel de Resultados */
         .results-panel {
             display: none;
             background-color: #f2f2f7;
@@ -148,7 +147,7 @@
 
         .circle:hover:not(.disabled) { border-color: #999; color: #999; }
 
-        /* Estados normales (Modo Examen) */
+        /* Estados normales */
         .main-row .circle.selected { background-color: var(--primary-color); border-color: var(--primary-color); color: white; }
         .main-row .circle.disabled { background-color: var(--disabled-color); border-color: var(--disabled-color); color: white; cursor: not-allowed; opacity: 0.5; }
         
@@ -217,9 +216,18 @@
             
             let isCorrectionMode = false;
             
-            let savedState = JSON.parse(localStorage.getItem('plantillaOposicion')) || { 
-                title: '', numQuestions: 100, answers: {}, annulled: {}, official: {} 
-            };
+            // LÓGICA DE COMPATIBILIDAD MEJORADA
+            let savedState = JSON.parse(localStorage.getItem('plantillaOposicion'));
+            
+            if (!savedState) {
+                savedState = { title: '', numQuestions: 100, answers: {}, annulled: {}, official: {} };
+            } else {
+                // Si existe un guardado anterior, nos aseguramos de que no falten los nuevos datos
+                savedState.answers = savedState.answers || {};
+                savedState.annulled = savedState.annulled || {};
+                savedState.official = savedState.official || {};
+                savedState.numQuestions = savedState.numQuestions || 100;
+            }
             
             if (savedState.title) titleInput.value = savedState.title;
             if (savedState.numQuestions) numQuestionsInput.value = savedState.numQuestions;
@@ -241,7 +249,6 @@
                 number.textContent = i;
                 const mainOptions = document.createElement('div');
                 mainOptions.className = 'options';
-                mainOptions.dataset.q = i;
 
                 const annulRow = document.createElement('div');
                 annulRow.className = 'question-row annul-row';
@@ -250,7 +257,6 @@
                 annulLabel.textContent = 'ANULAR';
                 const annulOptions = document.createElement('div');
                 annulOptions.className = 'options';
-                annulOptions.dataset.q = i;
 
                 if (!savedState.annulled[i]) savedState.annulled[i] = [];
 
@@ -266,12 +272,16 @@
                     // Evento Círculo Principal
                     mainCircle.addEventListener('click', () => {
                         if (isCorrectionMode) {
-                            // En modo corrección establecemos la plantilla oficial
-                            savedState.official[i] = letter;
+                            // En modo corrección, permitimos marcar y desmarcar la plantilla oficial por si te equivocas
+                            if (savedState.official[i] === letter) {
+                                delete savedState.official[i];
+                            } else {
+                                savedState.official[i] = letter;
+                            }
                             saveToLocal();
                             renderUI();
                         } else {
-                            // En modo examen
+                            // En modo examen: si está anulada, no hace nada.
                             if (savedState.annulled[i].includes(letter)) return;
                             savedState.answers[i] = letter;
                             saveToLocal();
@@ -306,14 +316,12 @@
 
             cols.forEach(col => columnsContainer.appendChild(col));
 
-            // Renderiza los colores según el modo y el estado actual
             function renderUI() {
                 for (let i = 1; i <= totalQuestions; i++) {
                     ['A', 'B', 'C'].forEach(letter => {
                         const mCircle = document.querySelector(`.q${i}-${letter}`);
                         const aCircle = document.querySelector(`.aq${i}-${letter}`);
                         
-                        // Limpiar clases de estado
                         mCircle.classList.remove('selected', 'disabled', 'is-correct', 'is-wrong', 'is-official-target');
                         aCircle.classList.remove('annulled');
 
@@ -321,27 +329,23 @@
                         const isUserAnswer = savedState.answers[i] === letter;
                         const isOfficialAnswer = savedState.official[i] === letter;
 
-                        // Aplicar anulaciones (se ven en ambos modos)
                         if (isAnnulled) {
                             mCircle.classList.add('disabled');
                             aCircle.classList.add('annulled');
                         }
 
                         if (!isCorrectionMode) {
-                            // MODO EXAMEN: solo mostramos selecciones del usuario
                             if (isUserAnswer && !isAnnulled) mCircle.classList.add('selected');
                         } else {
-                            // MODO CORRECCIÓN: pintamos el resultado
                             if (savedState.official[i]) {
                                 if (isUserAnswer && isOfficialAnswer) {
-                                    mCircle.classList.add('is-correct'); // Acierto (Verde sólido)
+                                    mCircle.classList.add('is-correct'); 
                                 } else if (isUserAnswer && !isOfficialAnswer) {
-                                    mCircle.classList.add('is-wrong'); // Fallo (Rojo sólido)
+                                    mCircle.classList.add('is-wrong'); 
                                 } else if (isOfficialAnswer) {
-                                    mCircle.classList.add('is-official-target'); // Era la correcta y la dejaste en blanco/fallaste (Borde verde)
+                                    mCircle.classList.add('is-official-target'); 
                                 }
                             } else {
-                                // Si no hemos metido respuesta oficial para esta, mostramos la del usuario normal
                                 if (isUserAnswer && !isAnnulled) mCircle.classList.add('selected');
                             }
                         }
@@ -349,7 +353,6 @@
                 }
             }
 
-            // Alternar Modo
             modeToggle.addEventListener('click', () => {
                 isCorrectionMode = !isCorrectionMode;
                 if (isCorrectionMode) {
@@ -365,7 +368,6 @@
                 renderUI();
             });
 
-            // Calcular Nota
             calcBtn.addEventListener('click', () => {
                 const limit = parseInt(numQuestionsInput.value) || 100;
                 let correct = 0, wrong = 0, blank = 0;
@@ -374,8 +376,6 @@
                     const userAns = savedState.answers[i];
                     const offAns = savedState.official[i];
 
-                    // Si no hay respuesta oficial introducida para una pregunta dentro del límite, 
-                    // la consideramos en blanco a efectos de cálculo (o el usuario olvidó introducirla).
                     if (!offAns) {
                         blank++;
                         continue;
@@ -390,11 +390,10 @@
                     }
                 }
 
-                // Fórmula: 1 acierto suma, 1 fallo resta 0.5 (2 fallos restan 1)
                 let rawScore = correct - (wrong * 0.5);
                 let finalScore = (rawScore / limit) * 10;
                 
-                if (finalScore < 0) finalScore = 0; // Evitar notas negativas por debajo de 0
+                if (finalScore < 0) finalScore = 0; 
 
                 document.getElementById('resCorrect').textContent = correct;
                 document.getElementById('resWrong').textContent = wrong;
@@ -405,12 +404,10 @@
                 resultsPanel.scrollIntoView({ behavior: 'smooth' });
             });
 
-            // Persistencia
             titleInput.addEventListener('input', () => { savedState.title = titleInput.value; saveToLocal(); });
             numQuestionsInput.addEventListener('input', () => { savedState.numQuestions = numQuestionsInput.value; saveToLocal(); });
             function saveToLocal() { localStorage.setItem('plantillaOposicion', JSON.stringify(savedState)); }
 
-            // Limpieza general
             document.getElementById('clearBtn').addEventListener('click', () => {
                 if(confirm('¿Limpiar toda la plantilla? Se borrarán tus respuestas y la corrección oficial.')) {
                     savedState = { title: titleInput.value, numQuestions: numQuestionsInput.value, answers: {}, annulled: {}, official: {} };
@@ -420,7 +417,6 @@
                 }
             });
 
-            // Descarga de backup
             document.getElementById('saveBtn').addEventListener('click', () => {
                 const title = titleInput.value || 'Examen';
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedState, null, 2));
@@ -432,7 +428,6 @@
                 node.remove();
             });
 
-            // Renderizado inicial al cargar
             renderUI();
         });
     </script>
