@@ -28,7 +28,7 @@
 
         .container {
             width: 100%;
-            max-width: 850px;
+            max-width: 1000px;
             background-color: var(--card-bg);
             border-radius: 12px;
             padding: 30px;
@@ -57,18 +57,25 @@
             border-color: var(--primary-color);
         }
 
-        .grid {
+        /* Estructura de 4 columnas */
+        .exam-columns {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
             margin-bottom: 30px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .q-block {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            padding-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #eee;
         }
 
@@ -81,20 +88,20 @@
         .q-number {
             font-weight: 700;
             font-size: 1.1rem;
-            width: 50px;
+            width: 35px;
         }
 
         .annul-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 600;
             color: var(--annul-color);
-            width: 50px;
+            width: 35px;
             letter-spacing: -0.5px;
         }
 
         .options {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
         .circle {
@@ -136,9 +143,9 @@
 
         /* Estados de la hilera de anulación */
         .annul-row .circle {
-            width: 24px;
-            height: 24px;
-            font-size: 0.75rem;
+            width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
             border-width: 1px;
         }
 
@@ -180,8 +187,13 @@
 
         .btn-save:hover { background-color: #0056b3; }
 
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+        /* Adaptabilidad para pantallas más pequeñas */
+        @media (max-width: 900px) {
+            .exam-columns { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 500px) {
+            .exam-columns { grid-template-columns: 1fr; }
             .container { padding: 15px; }
         }
     </style>
@@ -194,8 +206,8 @@
             <input type="text" id="examTitle" placeholder="Título de la plantilla...">
         </div>
 
-        <div class="grid" id="examGrid">
-            <!-- Las preguntas se inyectan mediante JS -->
+        <div class="exam-columns" id="examColumns">
+            <!-- Las columnas se inyectan mediante JS -->
         </div>
 
         <div class="controls">
@@ -207,7 +219,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const totalQuestions = 100;
-            const grid = document.getElementById('examGrid');
+            const columnsContainer = document.getElementById('examColumns');
             const titleInput = document.getElementById('examTitle');
             
             let savedState = JSON.parse(localStorage.getItem('plantillaOposicion')) || { 
@@ -217,6 +229,15 @@
             };
             
             if (savedState.title) titleInput.value = savedState.title;
+
+            // Crear las 4 columnas
+            const cols = [
+                document.createElement('div'),
+                document.createElement('div'),
+                document.createElement('div'),
+                document.createElement('div')
+            ];
+            cols.forEach(col => col.className = 'column');
 
             for (let i = 1; i <= totalQuestions; i++) {
                 const qBlock = document.createElement('div');
@@ -247,19 +268,16 @@
                 if (!savedState.annulled[i]) savedState.annulled[i] = [];
 
                 ['A', 'B', 'C'].forEach(letter => {
-                    // Círculos principales
                     const mainCircle = document.createElement('div');
                     mainCircle.className = 'circle main-circle';
                     mainCircle.textContent = letter;
                     mainCircle.dataset.letter = letter;
                     
-                    // Círculos de anulación
                     const annulCircle = document.createElement('div');
                     annulCircle.className = 'circle annul-circle';
                     annulCircle.textContent = letter;
                     annulCircle.dataset.letter = letter;
 
-                    // Restaurar estado guardado
                     const isAnnulled = savedState.annulled[i].includes(letter);
                     if (isAnnulled) {
                         mainCircle.classList.add('disabled');
@@ -270,19 +288,14 @@
                         mainCircle.classList.add('selected');
                     }
 
-                    // Evento: Marcar respuesta principal
                     mainCircle.addEventListener('click', () => {
-                        if (savedState.annulled[i].includes(letter)) return; // Bloqueado si está anulada
-                        
-                        // Quitar selección previa en esta pregunta
+                        if (savedState.annulled[i].includes(letter)) return;
                         Array.from(mainOptions.children).forEach(c => c.classList.remove('selected'));
-                        
                         mainCircle.classList.add('selected');
                         savedState.answers[i] = letter;
                         saveToLocal();
                     });
 
-                    // Evento: Anular respuesta
                     annulCircle.addEventListener('click', () => {
                         if (!savedState.annulled[i].includes(letter)) {
                             savedState.annulled[i].push(letter);
@@ -290,7 +303,6 @@
                             mainCircle.classList.add('disabled');
                             mainCircle.classList.remove('selected');
                             
-                            // Si la anulada era la que estaba marcada como respuesta, la borramos
                             if (savedState.answers[i] === letter) {
                                 delete savedState.answers[i];
                             }
@@ -304,14 +316,25 @@
 
                 mainRow.appendChild(number);
                 mainRow.appendChild(mainOptions);
-                
                 annulRow.appendChild(annulLabel);
                 annulRow.appendChild(annulOptions);
-
                 qBlock.appendChild(mainRow);
                 qBlock.appendChild(annulRow);
-                grid.appendChild(qBlock);
+
+                // Distribuir en las 4 columnas (25 preguntas por columna)
+                if (i <= 25) {
+                    cols[0].appendChild(qBlock);
+                } else if (i <= 50) {
+                    cols[1].appendChild(qBlock);
+                } else if (i <= 75) {
+                    cols[2].appendChild(qBlock);
+                } else {
+                    cols[3].appendChild(qBlock);
+                }
             }
+
+            // Añadir las columnas al contenedor principal
+            cols.forEach(col => columnsContainer.appendChild(col));
 
             titleInput.addEventListener('input', () => {
                 savedState.title = titleInput.value;
@@ -326,7 +349,7 @@
                 if(confirm('¿Limpiar toda la plantilla? Se perderán las respuestas y anulaciones actuales.')) {
                     savedState = { title: titleInput.value, answers: {}, annulled: {} };
                     saveToLocal();
-                    location.reload(); // Recarga limpia de la UI
+                    location.reload();
                 }
             });
 
