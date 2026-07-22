@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plantilla de Examen - Oposición</title>
+    <style>
+        /* Estilos inspirados en el ecosistema Apple para una lectura y pulsación cómoda */
+        :root {
+            --primary-color: #007aff;
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-color: #1d1d1f;
+            --border-color: #d2d2d7;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header input[type="text"] {
+            width: 100%;
+            max-width: 400px;
+            font-size: 1.2rem;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 10px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .header input[type="text"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .question-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .q-number {
+            font-weight: 600;
+            width: 30px;
+        }
+
+        .options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .circle:hover {
+            border-color: #999;
+            color: #999;
+        }
+
+        .circle.selected {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-clear {
+            background-color: #ff3b30;
+            color: white;
+        }
+
+        .btn-clear:hover { background-color: #d70015; }
+
+        .btn-save {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-save:hover { background-color: #0056b3; }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>Plantilla de Respuestas</h2>
+            <input type="text" id="examTitle" placeholder="Ej. Simulacro Código Penal">
+        </div>
+
+        <div class="grid" id="examGrid">
+            <!-- Las 100 preguntas se inyectan mediante JavaScript -->
+        </div>
+
+        <div class="controls">
+            <button class="btn-clear" id="clearBtn">Limpiar Plantilla</button>
+            <button class="btn-save" id="saveBtn">Descargar Corrección</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const totalQuestions = 100;
+            const grid = document.getElementById('examGrid');
+            const titleInput = document.getElementById('examTitle');
+            const clearBtn = document.getElementById('clearBtn');
+            const saveBtn = document.getElementById('saveBtn');
+
+            // Cargar estado de la memoria local para no perder datos si se recarga Safari
+            let savedState = JSON.parse(localStorage.getItem('plantillaExamen')) || {};
+            if (savedState.title) {
+                titleInput.value = savedState.title;
+            }
+
+            // Generar la cuadrícula de preguntas (1 a 100 con opciones A, B, C)
+            for (let i = 1; i <= totalQuestions; i++) {
+                const row = document.createElement('div');
+                row.className = 'question-row';
+
+                const number = document.createElement('div');
+                number.className = 'q-number';
+                number.textContent = i;
+
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'options';
+
+                ['A', 'B', 'C'].forEach(letter => {
+                    const circle = document.createElement('div');
+                    circle.className = 'circle';
+                    circle.textContent = letter;
+                    circle.dataset.q = i;
+                    circle.dataset.val = letter;
+
+                    // Marcar si ya estaba guardada en el localStorage
+                    if (savedState.answers && savedState.answers[i] === letter) {
+                        circle.classList.add('selected');
+                    }
+
+                    circle.addEventListener('click', () => handleSelection(i, letter, circle, optionsDiv));
+                    optionsDiv.appendChild(circle);
+                });
+
+                row.appendChild(number);
+                row.appendChild(optionsDiv);
+                grid.appendChild(row);
+            }
+
+            // Lógica para seleccionar opción
+            function handleSelection(qNumber, letter, clickedElement, optionsContainer) {
+                const circles = optionsContainer.querySelectorAll('.circle');
+                
+                // Si pulsas el mismo que ya está activo, lo desmarcas (por si te equivocas)
+                if (clickedElement.classList.contains('selected')) {
+                    clickedElement.classList.remove('selected');
+                    delete savedState.answers[qNumber];
+                } else {
+                    // Quitar clase selected a los demás de la misma pregunta
+                    circles.forEach(c => c.classList.remove('selected'));
+                    // Añadir clase al clicado
+                    clickedElement.classList.add('selected');
+                    
+                    if (!savedState.answers) savedState.answers = {};
+                    savedState.answers[qNumber] = letter;
+                }
+                
+                saveToLocal();
+            }
+
+            // Guardar título cuando el usuario escribe
+            titleInput.addEventListener('input', () => {
+                savedState.title = titleInput.value;
+                saveToLocal();
+            });
+
+            function saveToLocal() {
+                localStorage.setItem('plantillaExamen', JSON.stringify(savedState));
+            }
+
+            // Limpiar la plantilla entera
+            clearBtn.addEventListener('click', () => {
+                if(confirm('¿Estás seguro de que quieres limpiar toda la plantilla? Se borrarán tus respuestas actuales.')) {
+                    document.querySelectorAll('.circle.selected').forEach(c => c.classList.remove('selected'));
+                    titleInput.value = '';
+                    savedState = { title: '', answers: {} };
+                    localStorage.removeItem('plantillaExamen');
+                }
+            });
+
+            // Descargar el examen actual como un archivo físico JSON puro
+            saveBtn.addEventListener('click', () => {
+                const title = titleInput.value || 'Examen_Sin_Titulo';
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedState, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", title.replace(/\s+/g, '_') + ".json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            });
+        });
+    </script>
+</body>
+</html>
