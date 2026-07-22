@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plantilla de Examen - Oposición</title>
+    <title>Plantilla de Examen</title>
     <style>
-        /* Estilos inspirados en el ecosistema Apple para una lectura y pulsación cómoda */
         :root {
             --primary-color: #007aff;
+            --annul-color: #ff3b30;
             --bg-color: #f5f5f7;
             --card-bg: #ffffff;
             --text-color: #1d1d1f;
             --border-color: #d2d2d7;
+            --disabled-color: #e5e5ea;
         }
 
         body {
@@ -27,7 +28,7 @@
 
         .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 850px;
             background-color: var(--card-bg);
             border-radius: 12px;
             padding: 30px;
@@ -58,52 +59,92 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
             margin-bottom: 30px;
+        }
+
+        .q-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
         }
 
         .question-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 5px 10px;
-            border-bottom: 1px solid #eee;
         }
 
         .q-number {
+            font-weight: 700;
+            font-size: 1.1rem;
+            width: 50px;
+        }
+
+        .annul-label {
+            font-size: 0.7rem;
             font-weight: 600;
-            width: 30px;
+            color: var(--annul-color);
+            width: 50px;
+            letter-spacing: -0.5px;
         }
 
         .options {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .circle {
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             border: 2px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 0.9rem;
             color: var(--border-color);
             cursor: pointer;
             user-select: none;
             transition: all 0.2s ease;
+            background-color: white;
         }
 
-        .circle:hover {
+        .circle:hover:not(.disabled) {
             border-color: #999;
             color: #999;
         }
 
-        .circle.selected {
+        /* Estados de la hilera principal */
+        .main-row .circle.selected {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
+            color: white;
+        }
+
+        .main-row .circle.disabled {
+            background-color: var(--disabled-color);
+            border-color: var(--disabled-color);
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* Estados de la hilera de anulación */
+        .annul-row .circle {
+            width: 24px;
+            height: 24px;
+            font-size: 0.75rem;
+            border-width: 1px;
+        }
+
+        .annul-row .circle.annulled {
+            background-color: var(--annul-color);
+            border-color: var(--annul-color);
             color: white;
         }
 
@@ -140,7 +181,7 @@
         .btn-save:hover { background-color: #0056b3; }
 
         @media (max-width: 600px) {
-            .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
             .container { padding: 15px; }
         }
     </style>
@@ -150,16 +191,16 @@
     <div class="container">
         <div class="header">
             <h2>Plantilla de Respuestas</h2>
-            <input type="text" id="examTitle" placeholder="Ej. Simulacro Código Penal">
+            <input type="text" id="examTitle" placeholder="Título de la plantilla...">
         </div>
 
         <div class="grid" id="examGrid">
-            <!-- Las 100 preguntas se inyectan mediante JavaScript -->
+            <!-- Las preguntas se inyectan mediante JS -->
         </div>
 
         <div class="controls">
             <button class="btn-clear" id="clearBtn">Limpiar Plantilla</button>
-            <button class="btn-save" id="saveBtn">Descargar Corrección</button>
+            <button class="btn-save" id="saveBtn">Descargar Archivo</button>
         </div>
     </div>
 
@@ -168,99 +209,136 @@
             const totalQuestions = 100;
             const grid = document.getElementById('examGrid');
             const titleInput = document.getElementById('examTitle');
-            const clearBtn = document.getElementById('clearBtn');
-            const saveBtn = document.getElementById('saveBtn');
+            
+            let savedState = JSON.parse(localStorage.getItem('plantillaOposicion')) || { 
+                title: '', 
+                answers: {}, 
+                annulled: {} 
+            };
+            
+            if (savedState.title) titleInput.value = savedState.title;
 
-            // Cargar estado de la memoria local para no perder datos si se recarga Safari
-            let savedState = JSON.parse(localStorage.getItem('plantillaExamen')) || {};
-            if (savedState.title) {
-                titleInput.value = savedState.title;
-            }
-
-            // Generar la cuadrícula de preguntas (1 a 100 con opciones A, B, C)
             for (let i = 1; i <= totalQuestions; i++) {
-                const row = document.createElement('div');
-                row.className = 'question-row';
+                const qBlock = document.createElement('div');
+                qBlock.className = 'q-block';
 
+                // HILERA PRINCIPAL
+                const mainRow = document.createElement('div');
+                mainRow.className = 'question-row main-row';
+                
                 const number = document.createElement('div');
                 number.className = 'q-number';
                 number.textContent = i;
+                
+                const mainOptions = document.createElement('div');
+                mainOptions.className = 'options';
 
-                const optionsDiv = document.createElement('div');
-                optionsDiv.className = 'options';
+                // HILERA DE ANULACIÓN
+                const annulRow = document.createElement('div');
+                annulRow.className = 'question-row annul-row';
+                
+                const annulLabel = document.createElement('div');
+                annulLabel.className = 'annul-label';
+                annulLabel.textContent = 'ANULAR';
+                
+                const annulOptions = document.createElement('div');
+                annulOptions.className = 'options';
+
+                if (!savedState.annulled[i]) savedState.annulled[i] = [];
 
                 ['A', 'B', 'C'].forEach(letter => {
-                    const circle = document.createElement('div');
-                    circle.className = 'circle';
-                    circle.textContent = letter;
-                    circle.dataset.q = i;
-                    circle.dataset.val = letter;
+                    // Círculos principales
+                    const mainCircle = document.createElement('div');
+                    mainCircle.className = 'circle main-circle';
+                    mainCircle.textContent = letter;
+                    mainCircle.dataset.letter = letter;
+                    
+                    // Círculos de anulación
+                    const annulCircle = document.createElement('div');
+                    annulCircle.className = 'circle annul-circle';
+                    annulCircle.textContent = letter;
+                    annulCircle.dataset.letter = letter;
 
-                    // Marcar si ya estaba guardada en el localStorage
-                    if (savedState.answers && savedState.answers[i] === letter) {
-                        circle.classList.add('selected');
+                    // Restaurar estado guardado
+                    const isAnnulled = savedState.annulled[i].includes(letter);
+                    if (isAnnulled) {
+                        mainCircle.classList.add('disabled');
+                        annulCircle.classList.add('annulled');
+                    }
+                    
+                    if (savedState.answers[i] === letter && !isAnnulled) {
+                        mainCircle.classList.add('selected');
                     }
 
-                    circle.addEventListener('click', () => handleSelection(i, letter, circle, optionsDiv));
-                    optionsDiv.appendChild(circle);
+                    // Evento: Marcar respuesta principal
+                    mainCircle.addEventListener('click', () => {
+                        if (savedState.annulled[i].includes(letter)) return; // Bloqueado si está anulada
+                        
+                        // Quitar selección previa en esta pregunta
+                        Array.from(mainOptions.children).forEach(c => c.classList.remove('selected'));
+                        
+                        mainCircle.classList.add('selected');
+                        savedState.answers[i] = letter;
+                        saveToLocal();
+                    });
+
+                    // Evento: Anular respuesta
+                    annulCircle.addEventListener('click', () => {
+                        if (!savedState.annulled[i].includes(letter)) {
+                            savedState.annulled[i].push(letter);
+                            annulCircle.classList.add('annulled');
+                            mainCircle.classList.add('disabled');
+                            mainCircle.classList.remove('selected');
+                            
+                            // Si la anulada era la que estaba marcada como respuesta, la borramos
+                            if (savedState.answers[i] === letter) {
+                                delete savedState.answers[i];
+                            }
+                            saveToLocal();
+                        }
+                    });
+
+                    mainOptions.appendChild(mainCircle);
+                    annulOptions.appendChild(annulCircle);
                 });
 
-                row.appendChild(number);
-                row.appendChild(optionsDiv);
-                grid.appendChild(row);
+                mainRow.appendChild(number);
+                mainRow.appendChild(mainOptions);
+                
+                annulRow.appendChild(annulLabel);
+                annulRow.appendChild(annulOptions);
+
+                qBlock.appendChild(mainRow);
+                qBlock.appendChild(annulRow);
+                grid.appendChild(qBlock);
             }
 
-            // Lógica para seleccionar opción
-            function handleSelection(qNumber, letter, clickedElement, optionsContainer) {
-                const circles = optionsContainer.querySelectorAll('.circle');
-                
-                // Si pulsas el mismo que ya está activo, lo desmarcas (por si te equivocas)
-                if (clickedElement.classList.contains('selected')) {
-                    clickedElement.classList.remove('selected');
-                    delete savedState.answers[qNumber];
-                } else {
-                    // Quitar clase selected a los demás de la misma pregunta
-                    circles.forEach(c => c.classList.remove('selected'));
-                    // Añadir clase al clicado
-                    clickedElement.classList.add('selected');
-                    
-                    if (!savedState.answers) savedState.answers = {};
-                    savedState.answers[qNumber] = letter;
-                }
-                
-                saveToLocal();
-            }
-
-            // Guardar título cuando el usuario escribe
             titleInput.addEventListener('input', () => {
                 savedState.title = titleInput.value;
                 saveToLocal();
             });
 
             function saveToLocal() {
-                localStorage.setItem('plantillaExamen', JSON.stringify(savedState));
+                localStorage.setItem('plantillaOposicion', JSON.stringify(savedState));
             }
 
-            // Limpiar la plantilla entera
-            clearBtn.addEventListener('click', () => {
-                if(confirm('¿Estás seguro de que quieres limpiar toda la plantilla? Se borrarán tus respuestas actuales.')) {
-                    document.querySelectorAll('.circle.selected').forEach(c => c.classList.remove('selected'));
-                    titleInput.value = '';
-                    savedState = { title: '', answers: {} };
-                    localStorage.removeItem('plantillaExamen');
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                if(confirm('¿Limpiar toda la plantilla? Se perderán las respuestas y anulaciones actuales.')) {
+                    savedState = { title: titleInput.value, answers: {}, annulled: {} };
+                    saveToLocal();
+                    location.reload(); // Recarga limpia de la UI
                 }
             });
 
-            // Descargar el examen actual como un archivo físico JSON puro
-            saveBtn.addEventListener('click', () => {
-                const title = titleInput.value || 'Examen_Sin_Titulo';
+            document.getElementById('saveBtn').addEventListener('click', () => {
+                const title = titleInput.value || 'Plantilla_Examen';
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedState, null, 2));
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", title.replace(/\s+/g, '_') + ".json");
-                document.body.appendChild(downloadAnchorNode);
-                downloadAnchorNode.click();
-                downloadAnchorNode.remove();
+                const downloadNode = document.createElement('a');
+                downloadNode.setAttribute("href", dataStr);
+                downloadNode.setAttribute("download", title.replace(/\s+/g, '_') + ".json");
+                document.body.appendChild(downloadNode);
+                downloadNode.click();
+                downloadNode.remove();
             });
         });
     </script>
