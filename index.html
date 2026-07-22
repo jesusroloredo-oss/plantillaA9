@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plantilla de Examen - Corrector</title>
+    <title>Plantilla de Examen - CNP</title>
+    <!-- Librería para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --primary-color: #007aff;
@@ -29,10 +31,10 @@
 
         .container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 950px;
             background-color: var(--card-bg);
             border-radius: 12px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
@@ -40,8 +42,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .header-inputs {
@@ -55,7 +57,7 @@
         input[type="text"] {
             flex-grow: 1;
             font-size: 1.1rem;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             outline: none;
@@ -63,9 +65,9 @@
         }
 
         input[type="number"] {
-            width: 80px;
+            width: 70px;
             font-size: 1.1rem;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             text-align: center;
@@ -77,26 +79,25 @@
         .mode-banner {
             width: 100%;
             max-width: 500px;
-            padding: 10px;
+            padding: 8px;
             border-radius: 8px;
             text-align: center;
             font-weight: 600;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.2s;
             background-color: var(--primary-color);
             color: white;
         }
         
-        .mode-banner.correction-active {
-            background-color: #5856d6;
-        }
+        .mode-banner.correction-active { background-color: #5856d6; }
 
         .results-panel {
             display: none;
             background-color: #f2f2f7;
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
+            padding: 15px;
+            margin-bottom: 20px;
             text-align: center;
             border: 2px solid #e5e5ea;
         }
@@ -106,60 +107,83 @@
         .results-grid {
             display: flex;
             justify-content: center;
-            gap: 30px;
-            margin-top: 15px;
-            font-size: 1.1rem;
+            gap: 25px;
+            margin-top: 10px;
+            font-size: 1.05rem;
         }
 
         .score-final {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--primary-color);
-            margin-top: 15px;
+            margin-top: 10px;
         }
 
         .exam-columns {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
-        .column { display: flex; flex-direction: column; gap: 15px; }
-        .q-block { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .column { display: flex; flex-direction: column; gap: 8px; }
+        
+        /* Ajuste de medidas para garantizar que encaje en 1 folio A4 */
+        .q-block { display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px; border-bottom: 1px solid #f0f0f0; }
         .question-row { display: flex; align-items: center; justify-content: space-between; }
-        .q-number { font-weight: 700; font-size: 1.1rem; width: 35px; }
+        .q-number { font-weight: 700; font-size: 0.95rem; width: 30px; }
         
         .annul-label {
-            font-size: 0.65rem; font-weight: 600; color: var(--annul-color);
-            width: 35px; letter-spacing: -0.5px;
+            font-size: 0.6rem; font-weight: 600; color: var(--annul-color);
+            width: 30px; letter-spacing: -0.5px;
         }
 
-        .options { display: flex; gap: 6px; }
+        .options { display: flex; gap: 5px; }
 
         .circle {
-            width: 30px; height: 30px; border-radius: 50%;
+            width: 26px; height: 26px; border-radius: 50%;
             border: 2px solid var(--border-color); display: flex;
             align-items: center; justify-content: center; font-weight: bold;
-            font-size: 0.9rem; color: var(--border-color); cursor: pointer;
+            font-size: 0.8rem; color: var(--border-color); cursor: pointer;
             user-select: none; transition: all 0.2s ease; background-color: white;
         }
 
         .circle:hover:not(.disabled) { border-color: #999; color: #999; }
 
-        /* Estados normales */
         .main-row .circle.selected { background-color: var(--primary-color); border-color: var(--primary-color); color: white; }
         .main-row .circle.disabled { background-color: var(--disabled-color); border-color: var(--disabled-color); color: white; cursor: not-allowed; opacity: 0.5; }
         
-        .annul-row .circle { width: 22px; height: 22px; font-size: 0.7rem; border-width: 1px; }
+        .annul-row .circle { width: 18px; height: 18px; font-size: 0.6rem; border-width: 1px; }
         .annul-row .circle.annulled { background-color: var(--annul-color); border-color: var(--annul-color); color: white; }
 
-        /* Estados de Corrección */
         .circle.is-correct { background-color: var(--correct-color) !important; border-color: var(--correct-color) !important; color: white !important; }
         .circle.is-wrong { background-color: var(--annul-color) !important; border-color: var(--annul-color) !important; color: white !important; }
         .circle.is-official-target { background-color: transparent !important; border-color: var(--correct-color) !important; color: var(--correct-color) !important; border-width: 3px !important; }
 
-        .controls { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        /* Cuadro de apuntes para la segunda carilla */
+        .notes-container {
+            display: none;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .notes-container.show { display: block; }
+        
+        textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+            outline: none;
+            background-color: #fafafa;
+        }
+        textarea:focus { border-color: var(--primary-color); }
+
+        .controls { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
         button { padding: 12px 24px; font-size: 1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
         .btn-clear { background-color: #ff3b30; color: white; }
         .btn-clear:hover { background-color: #d70015; }
@@ -168,15 +192,15 @@
         .btn-save { background-color: var(--text-color); color: white; }
 
         @media (max-width: 900px) { .exam-columns { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 500px) { .exam-columns { grid-template-columns: 1fr; } .container { padding: 15px; } .results-grid { flex-direction: column; gap: 10px;} }
+        @media (max-width: 500px) { .exam-columns { grid-template-columns: 1fr; } .container { padding: 15px; } .results-grid { flex-direction: column; gap: 5px;} }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="pdfExportArea">
         <div class="header">
-            <h2>Plantilla de Respuestas</h2>
-            <div class="header-inputs">
+            <h2 id="headerTitle">Plantilla de Respuestas</h2>
+            <div class="header-inputs" id="headerInputs">
                 <input type="text" id="examTitle" placeholder="Título de la plantilla...">
                 <input type="number" id="numQuestions" min="1" max="100" value="100" title="Número de preguntas del examen">
             </div>
@@ -186,7 +210,7 @@
         </div>
 
         <div id="resultsPanel" class="results-panel">
-            <h3>Resultados del Examen</h3>
+            <h3 style="margin-top: 0;">Resultados del Examen</h3>
             <div class="results-grid">
                 <div>Aciertos: <span id="resCorrect" style="color:var(--correct-color); font-weight:bold;">0</span></div>
                 <div>Fallos: <span id="resWrong" style="color:var(--annul-color); font-weight:bold;">0</span></div>
@@ -197,10 +221,19 @@
 
         <div class="exam-columns" id="examColumns"></div>
 
-        <div class="controls">
+        <!-- Sección de apuntes, con salto de página para el PDF -->
+        <div id="notesContainer" class="notes-container">
+            <!-- Esta clase obliga a crear una nueva página en el PDF -->
+            <div class="html2pdf__page-break"></div>
+            <h3>Apuntes y Correcciones</h3>
+            <textarea id="examNotes" placeholder="Escribe aquí tus justificaciones, artículos del Código Penal, trucos para recordar, etc."></textarea>
+        </div>
+
+        <!-- Controles fuera del área a imprimir (se ocultan dinámicamente) -->
+        <div class="controls" id="actionControls">
             <button class="btn-clear" id="clearBtn">Limpiar Todo</button>
             <button class="btn-calc" id="calcBtn" style="display: none;">Calcular Nota</button>
-            <button class="btn-save" id="saveBtn">Guardar Plantilla</button>
+            <button class="btn-save" id="saveBtn">Descargar PDF</button>
         </div>
     </div>
 
@@ -213,24 +246,26 @@
             const modeToggle = document.getElementById('modeToggle');
             const calcBtn = document.getElementById('calcBtn');
             const resultsPanel = document.getElementById('resultsPanel');
+            const notesContainer = document.getElementById('notesContainer');
+            const examNotes = document.getElementById('examNotes');
             
             let isCorrectionMode = false;
             
-            // LÓGICA DE COMPATIBILIDAD MEJORADA
             let savedState = JSON.parse(localStorage.getItem('plantillaOposicion'));
             
             if (!savedState) {
-                savedState = { title: '', numQuestions: 100, answers: {}, annulled: {}, official: {} };
+                savedState = { title: '', numQuestions: 100, answers: {}, annulled: {}, official: {}, notes: '' };
             } else {
-                // Si existe un guardado anterior, nos aseguramos de que no falten los nuevos datos
                 savedState.answers = savedState.answers || {};
                 savedState.annulled = savedState.annulled || {};
                 savedState.official = savedState.official || {};
                 savedState.numQuestions = savedState.numQuestions || 100;
+                savedState.notes = savedState.notes || '';
             }
             
             if (savedState.title) titleInput.value = savedState.title;
             if (savedState.numQuestions) numQuestionsInput.value = savedState.numQuestions;
+            if (savedState.notes) examNotes.value = savedState.notes;
 
             const cols = Array.from({length: 4}, () => {
                 let div = document.createElement('div');
@@ -269,19 +304,13 @@
                     annulCircle.className = `circle annul-circle aq${i}-${letter}`;
                     annulCircle.textContent = letter;
 
-                    // Evento Círculo Principal
                     mainCircle.addEventListener('click', () => {
                         if (isCorrectionMode) {
-                            // En modo corrección, permitimos marcar y desmarcar la plantilla oficial por si te equivocas
-                            if (savedState.official[i] === letter) {
-                                delete savedState.official[i];
-                            } else {
-                                savedState.official[i] = letter;
-                            }
+                            if (savedState.official[i] === letter) delete savedState.official[i];
+                            else savedState.official[i] = letter;
                             saveToLocal();
                             renderUI();
                         } else {
-                            // En modo examen: si está anulada, no hace nada.
                             if (savedState.annulled[i].includes(letter)) return;
                             savedState.answers[i] = letter;
                             saveToLocal();
@@ -289,9 +318,8 @@
                         }
                     });
 
-                    // Evento Círculo de Anulación
                     annulCircle.addEventListener('click', () => {
-                        if (isCorrectionMode) return; // En corrección no se anula
+                        if (isCorrectionMode) return; 
                         if (!savedState.annulled[i].includes(letter)) {
                             savedState.annulled[i].push(letter);
                             if (savedState.answers[i] === letter) delete savedState.answers[i];
@@ -338,13 +366,9 @@
                             if (isUserAnswer && !isAnnulled) mCircle.classList.add('selected');
                         } else {
                             if (savedState.official[i]) {
-                                if (isUserAnswer && isOfficialAnswer) {
-                                    mCircle.classList.add('is-correct'); 
-                                } else if (isUserAnswer && !isOfficialAnswer) {
-                                    mCircle.classList.add('is-wrong'); 
-                                } else if (isOfficialAnswer) {
-                                    mCircle.classList.add('is-official-target'); 
-                                }
+                                if (isUserAnswer && isOfficialAnswer) mCircle.classList.add('is-correct'); 
+                                else if (isUserAnswer && !isOfficialAnswer) mCircle.classList.add('is-wrong'); 
+                                else if (isOfficialAnswer) mCircle.classList.add('is-official-target'); 
                             } else {
                                 if (isUserAnswer && !isAnnulled) mCircle.classList.add('selected');
                             }
@@ -359,11 +383,13 @@
                     modeToggle.textContent = 'Modo: Corrección (Marcando Plantilla Oficial)';
                     modeToggle.classList.add('correction-active');
                     calcBtn.style.display = 'block';
+                    notesContainer.classList.add('show');
                 } else {
                     modeToggle.textContent = 'Modo: Realizando Examen (Pulsa para corregir)';
                     modeToggle.classList.remove('correction-active');
                     calcBtn.style.display = 'none';
                     resultsPanel.classList.remove('show');
+                    notesContainer.classList.remove('show');
                 }
                 renderUI();
             });
@@ -375,24 +401,15 @@
                 for (let i = 1; i <= limit; i++) {
                     const userAns = savedState.answers[i];
                     const offAns = savedState.official[i];
+                    if (!offAns) { blank++; continue; }
 
-                    if (!offAns) {
-                        blank++;
-                        continue;
-                    }
-
-                    if (userAns === offAns) {
-                        correct++;
-                    } else if (userAns) {
-                        wrong++;
-                    } else {
-                        blank++;
-                    }
+                    if (userAns === offAns) correct++;
+                    else if (userAns) wrong++;
+                    else blank++;
                 }
 
                 let rawScore = correct - (wrong * 0.5);
                 let finalScore = (rawScore / limit) * 10;
-                
                 if (finalScore < 0) finalScore = 0; 
 
                 document.getElementById('resCorrect').textContent = correct;
@@ -406,26 +423,54 @@
 
             titleInput.addEventListener('input', () => { savedState.title = titleInput.value; saveToLocal(); });
             numQuestionsInput.addEventListener('input', () => { savedState.numQuestions = numQuestionsInput.value; saveToLocal(); });
+            examNotes.addEventListener('input', () => { savedState.notes = examNotes.value; saveToLocal(); });
+            
             function saveToLocal() { localStorage.setItem('plantillaOposicion', JSON.stringify(savedState)); }
 
             document.getElementById('clearBtn').addEventListener('click', () => {
-                if(confirm('¿Limpiar toda la plantilla? Se borrarán tus respuestas y la corrección oficial.')) {
-                    savedState = { title: titleInput.value, numQuestions: numQuestionsInput.value, answers: {}, annulled: {}, official: {} };
+                if(confirm('¿Limpiar toda la plantilla? Se borrarán tus respuestas, apuntes y la corrección oficial.')) {
+                    savedState = { title: titleInput.value, numQuestions: numQuestionsInput.value, answers: {}, annulled: {}, official: {}, notes: '' };
+                    examNotes.value = '';
                     saveToLocal();
                     resultsPanel.classList.remove('show');
                     renderUI();
                 }
             });
 
+            // Lógica de exportación a PDF
             document.getElementById('saveBtn').addEventListener('click', () => {
-                const title = titleInput.value || 'Examen';
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedState, null, 2));
-                const node = document.createElement('a');
-                node.setAttribute("href", dataStr);
-                node.setAttribute("download", title.replace(/\s+/g, '_') + ".json");
-                document.body.appendChild(node);
-                node.click();
-                node.remove();
+                const element = document.getElementById('pdfExportArea');
+                
+                // Ocultar elementos interactivos para que el PDF quede limpio
+                const controls = document.getElementById('actionControls');
+                const headerInputs = document.getElementById('headerInputs');
+                const modeToggleEl = document.getElementById('modeToggle');
+                const titleHeading = document.getElementById('headerTitle');
+                
+                controls.style.display = 'none';
+                headerInputs.style.display = 'none';
+                modeToggleEl.style.display = 'none';
+                
+                // Poner el título introducido como texto fijo en el PDF
+                const currentTitle = titleHeading.textContent;
+                titleHeading.textContent = titleInput.value || 'Plantilla de Examen';
+
+                // Opciones del PDF
+                const opt = {
+                    margin:       [10, 10, 10, 10], // Márgenes estrechos para asegurar que encaja
+                    filename:     (titleInput.value || 'Examen_Correccion').replace(/\s+/g, '_') + '.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(element).save().then(() => {
+                    // Restaurar la vista web original
+                    controls.style.display = 'flex';
+                    headerInputs.style.display = 'flex';
+                    modeToggleEl.style.display = 'block';
+                    titleHeading.textContent = currentTitle;
+                });
             });
 
             renderUI();
