@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plantilla de Examen</title>
+    <title>Plantilla de Examen - Corrector</title>
     <style>
         :root {
             --primary-color: #007aff;
             --annul-color: #ff3b30;
+            --correct-color: #34c759;
             --bg-color: #f5f5f7;
             --card-bg: #ffffff;
             --text-color: #1d1d1f;
@@ -36,28 +37,88 @@
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
         }
 
-        .header input[type="text"] {
+        .header-inputs {
+            display: flex;
+            gap: 10px;
             width: 100%;
-            max-width: 400px;
-            font-size: 1.2rem;
+            max-width: 500px;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            font-size: 1.1rem;
             padding: 10px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            text-align: center;
-            margin-top: 10px;
             outline: none;
             transition: border-color 0.2s;
         }
 
-        .header input[type="text"]:focus {
-            border-color: var(--primary-color);
+        input[type="number"] {
+            width: 80px;
+            font-size: 1.1rem;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            outline: none;
         }
 
-        /* Estructura de 4 columnas */
+        input:focus { border-color: var(--primary-color); }
+
+        .mode-banner {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .mode-banner.correction-active {
+            background-color: #5856d6;
+        }
+
+        /* Panel de Resultados */
+        .results-panel {
+            display: none;
+            background-color: #f2f2f7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #e5e5ea;
+        }
+
+        .results-panel.show { display: block; }
+
+        .results-grid {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            font-size: 1.1rem;
+        }
+
+        .score-final {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-top: 15px;
+        }
+
         .exam-columns {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -65,137 +126,50 @@
             margin-bottom: 30px;
         }
 
-        .column {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .q-block {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .question-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .q-number {
-            font-weight: 700;
-            font-size: 1.1rem;
-            width: 35px;
-        }
-
+        .column { display: flex; flex-direction: column; gap: 15px; }
+        .q-block { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .question-row { display: flex; align-items: center; justify-content: space-between; }
+        .q-number { font-weight: 700; font-size: 1.1rem; width: 35px; }
+        
         .annul-label {
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: var(--annul-color);
-            width: 35px;
-            letter-spacing: -0.5px;
+            font-size: 0.65rem; font-weight: 600; color: var(--annul-color);
+            width: 35px; letter-spacing: -0.5px;
         }
 
-        .options {
-            display: flex;
-            gap: 6px;
-        }
+        .options { display: flex; gap: 6px; }
 
         .circle {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-            color: var(--border-color);
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s ease;
-            background-color: white;
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 2px solid var(--border-color); display: flex;
+            align-items: center; justify-content: center; font-weight: bold;
+            font-size: 0.9rem; color: var(--border-color); cursor: pointer;
+            user-select: none; transition: all 0.2s ease; background-color: white;
         }
 
-        .circle:hover:not(.disabled) {
-            border-color: #999;
-            color: #999;
-        }
+        .circle:hover:not(.disabled) { border-color: #999; color: #999; }
 
-        /* Estados de la hilera principal */
-        .main-row .circle.selected {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-
-        .main-row .circle.disabled {
-            background-color: var(--disabled-color);
-            border-color: var(--disabled-color);
-            color: white;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        /* Estados de la hilera de anulación */
-        .annul-row .circle {
-            width: 22px;
-            height: 22px;
-            font-size: 0.7rem;
-            border-width: 1px;
-        }
-
-        .annul-row .circle.annulled {
-            background-color: var(--annul-color);
-            border-color: var(--annul-color);
-            color: white;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-clear {
-            background-color: #ff3b30;
-            color: white;
-        }
-
-        .btn-clear:hover { background-color: #d70015; }
-
-        .btn-save {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-save:hover { background-color: #0056b3; }
-
-        /* Adaptabilidad para pantallas más pequeñas */
-        @media (max-width: 900px) {
-            .exam-columns { grid-template-columns: repeat(2, 1fr); }
-        }
+        /* Estados normales (Modo Examen) */
+        .main-row .circle.selected { background-color: var(--primary-color); border-color: var(--primary-color); color: white; }
+        .main-row .circle.disabled { background-color: var(--disabled-color); border-color: var(--disabled-color); color: white; cursor: not-allowed; opacity: 0.5; }
         
-        @media (max-width: 500px) {
-            .exam-columns { grid-template-columns: 1fr; }
-            .container { padding: 15px; }
-        }
+        .annul-row .circle { width: 22px; height: 22px; font-size: 0.7rem; border-width: 1px; }
+        .annul-row .circle.annulled { background-color: var(--annul-color); border-color: var(--annul-color); color: white; }
+
+        /* Estados de Corrección */
+        .circle.is-correct { background-color: var(--correct-color) !important; border-color: var(--correct-color) !important; color: white !important; }
+        .circle.is-wrong { background-color: var(--annul-color) !important; border-color: var(--annul-color) !important; color: white !important; }
+        .circle.is-official-target { background-color: transparent !important; border-color: var(--correct-color) !important; color: var(--correct-color) !important; border-width: 3px !important; }
+
+        .controls { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        button { padding: 12px 24px; font-size: 1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+        .btn-clear { background-color: #ff3b30; color: white; }
+        .btn-clear:hover { background-color: #d70015; }
+        .btn-calc { background-color: #34c759; color: white; }
+        .btn-calc:hover { background-color: #248a3d; }
+        .btn-save { background-color: var(--text-color); color: white; }
+
+        @media (max-width: 900px) { .exam-columns { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .exam-columns { grid-template-columns: 1fr; } .container { padding: 15px; } .results-grid { flex-direction: column; gap: 10px;} }
     </style>
 </head>
 <body>
@@ -203,16 +177,31 @@
     <div class="container">
         <div class="header">
             <h2>Plantilla de Respuestas</h2>
-            <input type="text" id="examTitle" placeholder="Título de la plantilla...">
+            <div class="header-inputs">
+                <input type="text" id="examTitle" placeholder="Título de la plantilla...">
+                <input type="number" id="numQuestions" min="1" max="100" value="100" title="Número de preguntas del examen">
+            </div>
+            <div id="modeToggle" class="mode-banner">
+                Modo: Realizando Examen (Pulsa para corregir)
+            </div>
         </div>
 
-        <div class="exam-columns" id="examColumns">
-            <!-- Las columnas se inyectan mediante JS -->
+        <div id="resultsPanel" class="results-panel">
+            <h3>Resultados del Examen</h3>
+            <div class="results-grid">
+                <div>Aciertos: <span id="resCorrect" style="color:var(--correct-color); font-weight:bold;">0</span></div>
+                <div>Fallos: <span id="resWrong" style="color:var(--annul-color); font-weight:bold;">0</span></div>
+                <div>En blanco: <span id="resBlank" style="font-weight:bold;">0</span></div>
+            </div>
+            <div class="score-final" id="resScore">Nota: 0.00 / 10</div>
         </div>
+
+        <div class="exam-columns" id="examColumns"></div>
 
         <div class="controls">
-            <button class="btn-clear" id="clearBtn">Limpiar Plantilla</button>
-            <button class="btn-save" id="saveBtn">Descargar Archivo</button>
+            <button class="btn-clear" id="clearBtn">Limpiar Todo</button>
+            <button class="btn-calc" id="calcBtn" style="display: none;">Calcular Nota</button>
+            <button class="btn-save" id="saveBtn">Guardar Plantilla</button>
         </div>
     </div>
 
@@ -221,92 +210,83 @@
             const totalQuestions = 100;
             const columnsContainer = document.getElementById('examColumns');
             const titleInput = document.getElementById('examTitle');
+            const numQuestionsInput = document.getElementById('numQuestions');
+            const modeToggle = document.getElementById('modeToggle');
+            const calcBtn = document.getElementById('calcBtn');
+            const resultsPanel = document.getElementById('resultsPanel');
+            
+            let isCorrectionMode = false;
             
             let savedState = JSON.parse(localStorage.getItem('plantillaOposicion')) || { 
-                title: '', 
-                answers: {}, 
-                annulled: {} 
+                title: '', numQuestions: 100, answers: {}, annulled: {}, official: {} 
             };
             
             if (savedState.title) titleInput.value = savedState.title;
+            if (savedState.numQuestions) numQuestionsInput.value = savedState.numQuestions;
 
-            // Crear las 4 columnas
-            const cols = [
-                document.createElement('div'),
-                document.createElement('div'),
-                document.createElement('div'),
-                document.createElement('div')
-            ];
-            cols.forEach(col => col.className = 'column');
+            const cols = Array.from({length: 4}, () => {
+                let div = document.createElement('div');
+                div.className = 'column';
+                return div;
+            });
 
             for (let i = 1; i <= totalQuestions; i++) {
                 const qBlock = document.createElement('div');
                 qBlock.className = 'q-block';
 
-                // HILERA PRINCIPAL
                 const mainRow = document.createElement('div');
                 mainRow.className = 'question-row main-row';
-                
                 const number = document.createElement('div');
                 number.className = 'q-number';
                 number.textContent = i;
-                
                 const mainOptions = document.createElement('div');
                 mainOptions.className = 'options';
+                mainOptions.dataset.q = i;
 
-                // HILERA DE ANULACIÓN
                 const annulRow = document.createElement('div');
                 annulRow.className = 'question-row annul-row';
-                
                 const annulLabel = document.createElement('div');
                 annulLabel.className = 'annul-label';
                 annulLabel.textContent = 'ANULAR';
-                
                 const annulOptions = document.createElement('div');
                 annulOptions.className = 'options';
+                annulOptions.dataset.q = i;
 
                 if (!savedState.annulled[i]) savedState.annulled[i] = [];
 
                 ['A', 'B', 'C'].forEach(letter => {
                     const mainCircle = document.createElement('div');
-                    mainCircle.className = 'circle main-circle';
+                    mainCircle.className = `circle main-circle q${i}-${letter}`;
                     mainCircle.textContent = letter;
-                    mainCircle.dataset.letter = letter;
                     
                     const annulCircle = document.createElement('div');
-                    annulCircle.className = 'circle annul-circle';
+                    annulCircle.className = `circle annul-circle aq${i}-${letter}`;
                     annulCircle.textContent = letter;
-                    annulCircle.dataset.letter = letter;
 
-                    const isAnnulled = savedState.annulled[i].includes(letter);
-                    if (isAnnulled) {
-                        mainCircle.classList.add('disabled');
-                        annulCircle.classList.add('annulled');
-                    }
-                    
-                    if (savedState.answers[i] === letter && !isAnnulled) {
-                        mainCircle.classList.add('selected');
-                    }
-
+                    // Evento Círculo Principal
                     mainCircle.addEventListener('click', () => {
-                        if (savedState.annulled[i].includes(letter)) return;
-                        Array.from(mainOptions.children).forEach(c => c.classList.remove('selected'));
-                        mainCircle.classList.add('selected');
-                        savedState.answers[i] = letter;
-                        saveToLocal();
+                        if (isCorrectionMode) {
+                            // En modo corrección establecemos la plantilla oficial
+                            savedState.official[i] = letter;
+                            saveToLocal();
+                            renderUI();
+                        } else {
+                            // En modo examen
+                            if (savedState.annulled[i].includes(letter)) return;
+                            savedState.answers[i] = letter;
+                            saveToLocal();
+                            renderUI();
+                        }
                     });
 
+                    // Evento Círculo de Anulación
                     annulCircle.addEventListener('click', () => {
+                        if (isCorrectionMode) return; // En corrección no se anula
                         if (!savedState.annulled[i].includes(letter)) {
                             savedState.annulled[i].push(letter);
-                            annulCircle.classList.add('annulled');
-                            mainCircle.classList.add('disabled');
-                            mainCircle.classList.remove('selected');
-                            
-                            if (savedState.answers[i] === letter) {
-                                delete savedState.answers[i];
-                            }
+                            if (savedState.answers[i] === letter) delete savedState.answers[i];
                             saveToLocal();
+                            renderUI();
                         }
                     });
 
@@ -314,55 +294,146 @@
                     annulOptions.appendChild(annulCircle);
                 });
 
-                mainRow.appendChild(number);
-                mainRow.appendChild(mainOptions);
-                annulRow.appendChild(annulLabel);
-                annulRow.appendChild(annulOptions);
-                qBlock.appendChild(mainRow);
-                qBlock.appendChild(annulRow);
+                mainRow.append(number, mainOptions);
+                annulRow.append(annulLabel, annulOptions);
+                qBlock.append(mainRow, annulRow);
 
-                // Distribuir en las 4 columnas (25 preguntas por columna)
-                if (i <= 25) {
-                    cols[0].appendChild(qBlock);
-                } else if (i <= 50) {
-                    cols[1].appendChild(qBlock);
-                } else if (i <= 75) {
-                    cols[2].appendChild(qBlock);
-                } else {
-                    cols[3].appendChild(qBlock);
-                }
+                if (i <= 25) cols[0].appendChild(qBlock);
+                else if (i <= 50) cols[1].appendChild(qBlock);
+                else if (i <= 75) cols[2].appendChild(qBlock);
+                else cols[3].appendChild(qBlock);
             }
 
-            // Añadir las columnas al contenedor principal
             cols.forEach(col => columnsContainer.appendChild(col));
 
-            titleInput.addEventListener('input', () => {
-                savedState.title = titleInput.value;
-                saveToLocal();
-            });
+            // Renderiza los colores según el modo y el estado actual
+            function renderUI() {
+                for (let i = 1; i <= totalQuestions; i++) {
+                    ['A', 'B', 'C'].forEach(letter => {
+                        const mCircle = document.querySelector(`.q${i}-${letter}`);
+                        const aCircle = document.querySelector(`.aq${i}-${letter}`);
+                        
+                        // Limpiar clases de estado
+                        mCircle.classList.remove('selected', 'disabled', 'is-correct', 'is-wrong', 'is-official-target');
+                        aCircle.classList.remove('annulled');
 
-            function saveToLocal() {
-                localStorage.setItem('plantillaOposicion', JSON.stringify(savedState));
+                        const isAnnulled = savedState.annulled[i].includes(letter);
+                        const isUserAnswer = savedState.answers[i] === letter;
+                        const isOfficialAnswer = savedState.official[i] === letter;
+
+                        // Aplicar anulaciones (se ven en ambos modos)
+                        if (isAnnulled) {
+                            mCircle.classList.add('disabled');
+                            aCircle.classList.add('annulled');
+                        }
+
+                        if (!isCorrectionMode) {
+                            // MODO EXAMEN: solo mostramos selecciones del usuario
+                            if (isUserAnswer && !isAnnulled) mCircle.classList.add('selected');
+                        } else {
+                            // MODO CORRECCIÓN: pintamos el resultado
+                            if (savedState.official[i]) {
+                                if (isUserAnswer && isOfficialAnswer) {
+                                    mCircle.classList.add('is-correct'); // Acierto (Verde sólido)
+                                } else if (isUserAnswer && !isOfficialAnswer) {
+                                    mCircle.classList.add('is-wrong'); // Fallo (Rojo sólido)
+                                } else if (isOfficialAnswer) {
+                                    mCircle.classList.add('is-official-target'); // Era la correcta y la dejaste en blanco/fallaste (Borde verde)
+                                }
+                            } else {
+                                // Si no hemos metido respuesta oficial para esta, mostramos la del usuario normal
+                                if (isUserAnswer && !isAnnulled) mCircle.classList.add('selected');
+                            }
+                        }
+                    });
+                }
             }
 
+            // Alternar Modo
+            modeToggle.addEventListener('click', () => {
+                isCorrectionMode = !isCorrectionMode;
+                if (isCorrectionMode) {
+                    modeToggle.textContent = 'Modo: Corrección (Marcando Plantilla Oficial)';
+                    modeToggle.classList.add('correction-active');
+                    calcBtn.style.display = 'block';
+                } else {
+                    modeToggle.textContent = 'Modo: Realizando Examen (Pulsa para corregir)';
+                    modeToggle.classList.remove('correction-active');
+                    calcBtn.style.display = 'none';
+                    resultsPanel.classList.remove('show');
+                }
+                renderUI();
+            });
+
+            // Calcular Nota
+            calcBtn.addEventListener('click', () => {
+                const limit = parseInt(numQuestionsInput.value) || 100;
+                let correct = 0, wrong = 0, blank = 0;
+
+                for (let i = 1; i <= limit; i++) {
+                    const userAns = savedState.answers[i];
+                    const offAns = savedState.official[i];
+
+                    // Si no hay respuesta oficial introducida para una pregunta dentro del límite, 
+                    // la consideramos en blanco a efectos de cálculo (o el usuario olvidó introducirla).
+                    if (!offAns) {
+                        blank++;
+                        continue;
+                    }
+
+                    if (userAns === offAns) {
+                        correct++;
+                    } else if (userAns) {
+                        wrong++;
+                    } else {
+                        blank++;
+                    }
+                }
+
+                // Fórmula: 1 acierto suma, 1 fallo resta 0.5 (2 fallos restan 1)
+                let rawScore = correct - (wrong * 0.5);
+                let finalScore = (rawScore / limit) * 10;
+                
+                if (finalScore < 0) finalScore = 0; // Evitar notas negativas por debajo de 0
+
+                document.getElementById('resCorrect').textContent = correct;
+                document.getElementById('resWrong').textContent = wrong;
+                document.getElementById('resBlank').textContent = blank;
+                document.getElementById('resScore').textContent = `Nota: ${finalScore.toFixed(2)} / 10`;
+                
+                resultsPanel.classList.add('show');
+                resultsPanel.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // Persistencia
+            titleInput.addEventListener('input', () => { savedState.title = titleInput.value; saveToLocal(); });
+            numQuestionsInput.addEventListener('input', () => { savedState.numQuestions = numQuestionsInput.value; saveToLocal(); });
+            function saveToLocal() { localStorage.setItem('plantillaOposicion', JSON.stringify(savedState)); }
+
+            // Limpieza general
             document.getElementById('clearBtn').addEventListener('click', () => {
-                if(confirm('¿Limpiar toda la plantilla? Se perderán las respuestas y anulaciones actuales.')) {
-                    savedState = { title: titleInput.value, answers: {}, annulled: {} };
+                if(confirm('¿Limpiar toda la plantilla? Se borrarán tus respuestas y la corrección oficial.')) {
+                    savedState = { title: titleInput.value, numQuestions: numQuestionsInput.value, answers: {}, annulled: {}, official: {} };
                     saveToLocal();
-                    location.reload();
+                    resultsPanel.classList.remove('show');
+                    renderUI();
                 }
             });
 
+            // Descarga de backup
             document.getElementById('saveBtn').addEventListener('click', () => {
-                const title = titleInput.value || 'Plantilla_Examen';
+                const title = titleInput.value || 'Examen';
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedState, null, 2));
-                const downloadNode = document.createElement('a');
-                downloadNode.setAttribute("href", dataStr);
-                downloadNode.setAttribute("download", title.replace(/\s+/g, '_') + ".json");
-                document.body.appendChild(downloadNode);
-                downloadNode.click();
-                downloadNode.remove();
+                const node = document.createElement('a');
+                node.setAttribute("href", dataStr);
+                node.setAttribute("download", title.replace(/\s+/g, '_') + ".json");
+                document.body.appendChild(node);
+                node.click();
+                node.remove();
             });
+
+            // Renderizado inicial al cargar
+            renderUI();
         });
     </script>
 </body>
