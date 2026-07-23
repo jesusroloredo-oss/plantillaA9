@@ -92,28 +92,39 @@
         .btn-save { background-color: var(--text-color); color: white; }
 
         /* ========================================================
-           CLASES ESPECÍFICAS PARA COMPRESIÓN DE EXPORTACIÓN A PDF 
-           Esto garantiza que la primera carilla no se corte jamás
+           MODO PDF ULTRA-COMPRIMIDO
+           Asegura que el A4 se aproveche desde el primer milímetro
            ======================================================== */
         .pdf-mode {
-            padding: 10px !important;
-            max-width: none !important;
+            padding: 5px 15px !important; /* Aprovechamos todo el ancho/alto */
+            margin: 0 !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            background-color: white !important;
         }
-        .pdf-mode .header { margin-bottom: 5px; gap: 5px; }
-        .pdf-mode #headerTitle { margin: 0; font-size: 1.3rem; }
-        .pdf-mode .results-panel { margin-bottom: 10px; padding: 5px 15px; }
-        .pdf-mode .results-grid { margin-top: 5px; gap: 15px; font-size: 0.95rem; }
-        .pdf-mode .score-final { font-size: 1.3rem; margin-top: 5px; }
-        .pdf-mode .exam-columns { gap: 12px; margin-bottom: 0; }
-        .pdf-mode .column { gap: 2px; }
-        .pdf-mode .q-block { gap: 2px; padding-bottom: 2px; }
+        .pdf-mode .header { margin-bottom: 5px !important; gap: 2px !important; }
+        .pdf-mode #headerTitle { font-size: 1.2rem !important; margin: 0 !important; }
         
-        /* Reducción milimétrica de los círculos para el PDF */
-        .pdf-mode .circle { width: 18px; height: 18px; font-size: 0.65rem; border-width: 1px; }
-        .pdf-mode .annul-row .circle { width: 12px; height: 12px; font-size: 0.45rem; }
-        .pdf-mode .q-number { width: 25px; font-size: 0.85rem; }
-        .pdf-mode .annul-label { width: 25px; font-size: 0.5rem; }
-        .pdf-mode .options { gap: 3px; }
+        .pdf-mode .results-panel { margin-bottom: 8px !important; padding: 5px !important; border: 1px solid #d2d2d7 !important; }
+        .pdf-mode .results-grid { margin-top: 2px !important; gap: 15px !important; font-size: 0.95rem !important; }
+        .pdf-mode .score-final { font-size: 1.3rem !important; margin-top: 5px !important; }
+        
+        .pdf-mode .exam-columns { gap: 10px !important; margin-bottom: 0 !important; }
+        .pdf-mode .column { gap: 1px !important; }
+        .pdf-mode .q-block { gap: 1px !important; padding-bottom: 1px !important; border-bottom: 1px solid #f2f2f7 !important;}
+        
+        .pdf-mode .q-number { width: 22px !important; font-size: 0.8rem !important; }
+        .pdf-mode .annul-label { width: 22px !important; font-size: 0.45rem !important; }
+        
+        .pdf-mode .circle { width: 16px !important; height: 16px !important; font-size: 0.65rem !important; border-width: 1px !important; }
+        .pdf-mode .annul-row .circle { width: 11px !important; height: 11px !important; font-size: 0.4rem !important; }
+        .pdf-mode .options { gap: 2px !important; }
+
+        /* Asegurar salto a la segunda página para los comentarios */
+        .pdf-mode .notes-container { 
+            display: block !important; 
+            margin-top: 30px !important;
+        }
 
         @media (max-width: 900px) { .exam-columns { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 500px) { .exam-columns { grid-template-columns: 1fr; } .container { padding: 15px; } .results-grid { flex-direction: column; gap: 5px;} }
@@ -149,16 +160,16 @@
             <div class="exam-columns" id="examColumns"></div>
         </div>
 
-        <!-- PÁGINA 2: Anotaciones separadas obligatoriamente -->
+        <!-- PÁGINA 2: Anotaciones (Si las hay) -->
         <div id="notesContainer" class="notes-container">
-            <!-- Salto de página nativo para la librería -->
+            <!-- Etiqueta nativa para forzar el salto a la carilla 2 -->
             <div class="html2pdf__page-break"></div>
             
             <h3 style="margin-bottom: 10px;">Apuntes y Correcciones</h3>
             <textarea id="examNotes" placeholder="Escribe aquí tus justificaciones, artículos del Código Penal, trucos para recordar, etc."></textarea>
         </div>
 
-        <!-- Botones (Se ocultan solos al imprimir) -->
+        <!-- Controles -->
         <div class="controls" id="actionControls">
             <button class="btn-clear" id="clearBtn">Limpiar Todo</button>
             <button class="btn-calc" id="calcBtn" style="display: none;">Calcular Nota</button>
@@ -179,18 +190,13 @@
             const examNotes = document.getElementById('examNotes');
             
             let isCorrectionMode = false;
+            let savedState = JSON.parse(localStorage.getItem('plantillaOposicion')) || { title: '', numQuestions: 100, answers: {}, annulled: {}, official: {}, notes: '' };
             
-            let savedState = JSON.parse(localStorage.getItem('plantillaOposicion'));
-            
-            if (!savedState) {
-                savedState = { title: '', numQuestions: 100, answers: {}, annulled: {}, official: {}, notes: '' };
-            } else {
-                savedState.answers = savedState.answers || {};
-                savedState.annulled = savedState.annulled || {};
-                savedState.official = savedState.official || {};
-                savedState.numQuestions = savedState.numQuestions || 100;
-                savedState.notes = savedState.notes || '';
-            }
+            savedState.answers = savedState.answers || {};
+            savedState.annulled = savedState.annulled || {};
+            savedState.official = savedState.official || {};
+            savedState.numQuestions = savedState.numQuestions || 100;
+            savedState.notes = savedState.notes || '';
             
             if (savedState.title) titleInput.value = savedState.title;
             if (savedState.numQuestions) numQuestionsInput.value = savedState.numQuestions;
@@ -366,65 +372,73 @@
                 }
             });
 
-            // LÓGICA DE EXPORTACIÓN A PDF EXACTA Y MEDIDA
+            // LÓGICA DE EXPORTACIÓN A PDF CORREGIDA
             document.getElementById('saveBtn').addEventListener('click', () => {
+                // 1. SOLUCIÓN AL CORTE: Forzamos el scroll a 0 para que la "foto" se tome desde la coordenada (0,0) exacta
+                window.scrollTo(0, 0);
+                
                 const element = document.getElementById('pdfExportArea');
                 const controls = document.getElementById('actionControls');
                 const headerInputs = document.getElementById('headerInputs');
                 const modeToggleEl = document.getElementById('modeToggle');
                 const titleHeading = document.getElementById('headerTitle');
                 
-                // 1. Ocultamos los botones y aplicamos clases de compresión
+                // Aplicar estilo de compresión PDF
                 element.classList.add('pdf-mode');
                 controls.style.display = 'none';
                 headerInputs.style.display = 'none';
                 modeToggleEl.style.display = 'none';
                 
-                // Fijar título como texto estático
                 const currentTitle = titleHeading.textContent;
                 titleHeading.textContent = titleInput.value || 'Plantilla de Examen';
 
-                // 2. Preparamos la Segunda Carilla obligando a que se muestre para el renderizado
+                // 2. SOLUCIÓN A LOS APUNTES: Obligar a que el contenedor de notas esté en bloque y sea procesado.
                 const wasNotesVisible = notesContainer.classList.contains('show');
+                notesContainer.style.display = 'block'; // Forzar CSS inline
                 notesContainer.classList.add('show');
                 
-                // Sustituimos el textarea por un div fijo porque los textareas dan problemas en los PDF
+                // Transformar el Textarea en un DIV estático porque html2canvas no renderiza bien los textarea.
                 const printNotesDiv = document.createElement('div');
-                printNotesDiv.style.minHeight = '300px';
+                printNotesDiv.id = 'printNotesDiv';
+                printNotesDiv.style.minHeight = '150px';
                 printNotesDiv.style.padding = '15px';
                 printNotesDiv.style.border = '1px solid #d2d2d7';
                 printNotesDiv.style.borderRadius = '8px';
                 printNotesDiv.style.backgroundColor = '#fafafa';
-                printNotesDiv.style.whiteSpace = 'pre-wrap';
-                printNotesDiv.textContent = examNotes.value || 'Sin anotaciones.';
+                printNotesDiv.style.whiteSpace = 'pre-wrap'; // Mantiene los saltos de línea (Enters)
+                printNotesDiv.innerText = examNotes.value || 'Sin anotaciones.';
                 
                 examNotes.style.display = 'none';
                 notesContainer.appendChild(printNotesDiv);
 
-                // 3. Generamos el PDF
-                const opt = {
-                    margin:       [8, 8, 8, 8], // Márgenes súper ajustados en milímetros
-                    filename:     (titleInput.value || 'Examen_CNP').replace(/\s+/g, '_') + '.pdf',
-                    image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { scale: 2, useCORS: true },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
+                // 3. El setTimeout(..., 150) le da al navegador tiempo para redibujar el HTML antes de generar el PDF
+                setTimeout(() => {
+                    const opt = {
+                        margin:       [5, 5, 5, 5], // Márgenes súper ajustados (5mm)
+                        filename:     (titleInput.value || 'Examen_CNP').replace(/\s+/g, '_') + '.pdf',
+                        image:        { type: 'jpeg', quality: 1.0 },
+                        // El scrollY: 0 garantiza que evite márgenes blancos superiores extraños
+                        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
 
-                html2pdf().set(opt).from(element).save().then(() => {
-                    // 4. Restauramos la web a su estado original interactivo
-                    element.classList.remove('pdf-mode');
-                    controls.style.display = 'flex';
-                    headerInputs.style.display = 'flex';
-                    modeToggleEl.style.display = 'block';
-                    titleHeading.textContent = currentTitle;
-                    
-                    examNotes.style.display = 'block';
-                    printNotesDiv.remove();
-                    
-                    if (!wasNotesVisible) {
-                        notesContainer.classList.remove('show');
-                    }
-                });
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        // Restaurar web a la normalidad
+                        element.classList.remove('pdf-mode');
+                        controls.style.display = 'flex';
+                        headerInputs.style.display = 'flex';
+                        modeToggleEl.style.display = 'block';
+                        titleHeading.textContent = currentTitle;
+                        
+                        examNotes.style.display = 'block';
+                        notesContainer.style.display = ''; // Limpiar inline
+                        document.getElementById('printNotesDiv').remove();
+                        
+                        if (!wasNotesVisible) {
+                            notesContainer.classList.remove('show');
+                        }
+                    });
+                }, 150); 
             });
 
             renderUI();
