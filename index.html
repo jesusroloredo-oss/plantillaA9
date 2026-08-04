@@ -36,6 +36,7 @@
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
         }
 
         .header { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 20px; }
@@ -77,7 +78,7 @@
         .circle.is-wrong { background-color: var(--annul-color) !important; border-color: var(--annul-color) !important; color: white !important; }
         .circle.is-official-target { background-color: transparent !important; border-color: var(--correct-color) !important; color: var(--correct-color) !important; border-width: 3px !important; }
 
-        .notes-container { display: none; width: 100%; margin-top: 30px; }
+        .notes-container { display: none; width: 100%; margin-top: 30px; box-sizing: border-box; }
         .notes-container.show { display: block; }
         
         textarea { width: 100%; min-height: 400px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; font-family: inherit; resize: vertical; box-sizing: border-box; outline: none; background-color: #fafafa; }
@@ -92,13 +93,14 @@
         .btn-save { background-color: var(--text-color); color: white; }
 
         /* ========================================================
-           MODO PDF ULTRA-COMPRIMIDO
-           Asegura que el A4 se aproveche desde el primer milímetro
+           MODO PDF: ANCHO RESTRINGIDO MATEMÁTICAMENTE (190mm)
            ======================================================== */
         .pdf-mode {
-            padding: 5px 15px !important; /* Aprovechamos todo el ancho/alto */
-            margin: 0 !important;
-            max-width: 100% !important;
+            padding: 5px 10px !important;
+            margin: 0 auto !important;
+            width: 190mm !important; /* Fuerza el ancho a ser menor que el A4 (210mm) */
+            max-width: 190mm !important;
+            box-sizing: border-box !important;
             box-shadow: none !important;
             background-color: white !important;
         }
@@ -120,10 +122,16 @@
         .pdf-mode .annul-row .circle { width: 11px !important; height: 11px !important; font-size: 0.4rem !important; }
         .pdf-mode .options { gap: 2px !important; }
 
-        /* Asegurar salto a la segunda página para los comentarios */
         .pdf-mode .notes-container { 
             display: block !important; 
             margin-top: 30px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .pdf-mode #printNotesDiv {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            word-wrap: break-word !important;
         }
 
         @media (max-width: 900px) { .exam-columns { grid-template-columns: repeat(2, 1fr); } }
@@ -160,9 +168,8 @@
             <div class="exam-columns" id="examColumns"></div>
         </div>
 
-        <!-- PÁGINA 2: Anotaciones (Si las hay) -->
+        <!-- PÁGINA 2: Anotaciones -->
         <div id="notesContainer" class="notes-container">
-            <!-- Etiqueta nativa para forzar el salto a la carilla 2 -->
             <div class="html2pdf__page-break"></div>
             
             <h3 style="margin-bottom: 10px;">Apuntes y Correcciones</h3>
@@ -372,9 +379,7 @@
                 }
             });
 
-            // LÓGICA DE EXPORTACIÓN A PDF CORREGIDA
             document.getElementById('saveBtn').addEventListener('click', () => {
-                // 1. SOLUCIÓN AL CORTE: Forzamos el scroll a 0 para que la "foto" se tome desde la coordenada (0,0) exacta
                 window.scrollTo(0, 0);
                 
                 const element = document.getElementById('pdfExportArea');
@@ -383,7 +388,6 @@
                 const modeToggleEl = document.getElementById('modeToggle');
                 const titleHeading = document.getElementById('headerTitle');
                 
-                // Aplicar estilo de compresión PDF
                 element.classList.add('pdf-mode');
                 controls.style.display = 'none';
                 headerInputs.style.display = 'none';
@@ -392,12 +396,10 @@
                 const currentTitle = titleHeading.textContent;
                 titleHeading.textContent = titleInput.value || 'Plantilla de Examen';
 
-                // 2. SOLUCIÓN A LOS APUNTES: Obligar a que el contenedor de notas esté en bloque y sea procesado.
                 const wasNotesVisible = notesContainer.classList.contains('show');
-                notesContainer.style.display = 'block'; // Forzar CSS inline
+                notesContainer.style.display = 'block';
                 notesContainer.classList.add('show');
                 
-                // Transformar el Textarea en un DIV estático porque html2canvas no renderiza bien los textarea.
                 const printNotesDiv = document.createElement('div');
                 printNotesDiv.id = 'printNotesDiv';
                 printNotesDiv.style.minHeight = '150px';
@@ -405,25 +407,25 @@
                 printNotesDiv.style.border = '1px solid #d2d2d7';
                 printNotesDiv.style.borderRadius = '8px';
                 printNotesDiv.style.backgroundColor = '#fafafa';
-                printNotesDiv.style.whiteSpace = 'pre-wrap'; // Mantiene los saltos de línea (Enters)
+                printNotesDiv.style.whiteSpace = 'pre-wrap';
+                printNotesDiv.style.boxSizing = 'border-box';
+                printNotesDiv.style.width = '100%';
                 printNotesDiv.innerText = examNotes.value || 'Sin anotaciones.';
                 
                 examNotes.style.display = 'none';
                 notesContainer.appendChild(printNotesDiv);
 
-                // 3. El setTimeout(..., 150) le da al navegador tiempo para redibujar el HTML antes de generar el PDF
                 setTimeout(() => {
                     const opt = {
-                        margin:       [5, 5, 5, 5], // Márgenes súper ajustados (5mm)
+                        margin:       [5, 5, 5, 5],
                         filename:     (titleInput.value || 'Examen_CNP').replace(/\s+/g, '_') + '.pdf',
                         image:        { type: 'jpeg', quality: 1.0 },
-                        // El scrollY: 0 garantiza que evite márgenes blancos superiores extraños
-                        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
+                        // Fijamos un windowWidth para evitar que pantallas anchas distorsionen el renderizado
+                        html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 800 }, 
                         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 
                     html2pdf().set(opt).from(element).save().then(() => {
-                        // Restaurar web a la normalidad
                         element.classList.remove('pdf-mode');
                         controls.style.display = 'flex';
                         headerInputs.style.display = 'flex';
@@ -431,7 +433,7 @@
                         titleHeading.textContent = currentTitle;
                         
                         examNotes.style.display = 'block';
-                        notesContainer.style.display = ''; // Limpiar inline
+                        notesContainer.style.display = '';
                         document.getElementById('printNotesDiv').remove();
                         
                         if (!wasNotesVisible) {
