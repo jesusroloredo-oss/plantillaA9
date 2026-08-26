@@ -26,75 +26,41 @@
             --disabled-color: #e5e5ea;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 950px;
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            box-sizing: border-box;
-        }
-
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 950px; background-color: var(--card-bg); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); box-sizing: border-box; }
         .header { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 20px; }
         .header-inputs { display: flex; gap: 10px; width: 100%; max-width: 600px; justify-content: center; flex-wrap: wrap; }
-
         input[type="text"] { flex-grow: 1; min-width: 200px; font-size: 1.1rem; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; transition: border-color 0.2s; }
         input[type="number"] { width: 70px; font-size: 1.1rem; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; text-align: center; outline: none; }
         input:focus { border-color: var(--primary-color); }
-
         .btn-import { background-color: #ff9500; color: white; padding: 8px 15px; font-size: 0.95rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; gap: 5px; }
         .btn-import:hover { background-color: #e58600; }
-
-        .mode-banner {
-            width: 100%; max-width: 500px; padding: 8px; border-radius: 8px; text-align: center; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; background-color: var(--primary-color); color: white;
-        }
+        .mode-banner { width: 100%; max-width: 500px; padding: 8px; border-radius: 8px; text-align: center; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; background-color: var(--primary-color); color: white; }
         .mode-banner.correction-active { background-color: #5856d6; }
-
         .results-panel { display: none; background-color: #f2f2f7; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; border: 2px solid #e5e5ea; }
         .results-panel.show { display: block; }
         .results-grid { display: flex; justify-content: center; gap: 25px; margin-top: 10px; font-size: 1.05rem; }
         .score-final { font-size: 1.8rem; font-weight: 700; color: var(--primary-color); margin-top: 10px; }
-
         .exam-columns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
         .column { display: flex; flex-direction: column; gap: 8px; }
         .q-block { display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px; border-bottom: 1px solid #f0f0f0; }
         .question-row { display: flex; align-items: center; justify-content: space-between; }
         .q-number { font-weight: 700; font-size: 0.95rem; width: 30px; }
         .annul-label { font-size: 0.6rem; font-weight: 600; color: var(--annul-color); width: 30px; letter-spacing: -0.5px; }
-
         .options { display: flex; gap: 5px; }
-        .circle {
-            width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: var(--border-color); cursor: pointer; user-select: none; transition: all 0.2s ease; background-color: white;
-        }
+        .circle { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: var(--border-color); cursor: pointer; user-select: none; transition: all 0.2s ease; background-color: white; }
         .circle:hover:not(.disabled) { border-color: #999; color: #999; }
-
         .main-row .circle.selected { background-color: var(--primary-color); border-color: var(--primary-color); color: white; }
         .main-row .circle.disabled { background-color: var(--disabled-color); border-color: var(--disabled-color); color: white; cursor: not-allowed; opacity: 0.5; }
         .annul-row .circle { width: 18px; height: 18px; font-size: 0.6rem; border-width: 1px; }
         .annul-row .circle.annulled { background-color: var(--annul-color); border-color: var(--annul-color); color: white; }
-
         .circle.is-correct { background-color: var(--correct-color) !important; border-color: var(--correct-color) !important; color: white !important; }
         .circle.is-wrong { background-color: var(--annul-color) !important; border-color: var(--annul-color) !important; color: white !important; }
         .circle.is-official-target { background-color: transparent !important; border-color: var(--correct-color) !important; color: var(--correct-color) !important; border-width: 3px !important; }
-
         .notes-container { display: none; width: 100%; margin-top: 30px; box-sizing: border-box; }
         .notes-container.show { display: block; }
-        
         textarea { width: 100%; min-height: 400px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; font-family: inherit; resize: vertical; box-sizing: border-box; outline: none; background-color: #fafafa; }
         textarea:focus { border-color: var(--primary-color); }
-
         .controls { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
         button { padding: 12px 24px; font-size: 1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
         .btn-clear { background-color: #ff3b30; color: white; }
@@ -102,47 +68,22 @@
         .btn-calc { background-color: #34c759; color: white; }
         .btn-calc:hover { background-color: #248a3d; }
         .btn-save { background-color: var(--text-color); color: white; }
-
-        /* MODO PDF: ANCHO RESTRINGIDO MATEMÁTICAMENTE (190mm) */
-        .pdf-mode {
-            padding: 5px 10px !important;
-            margin: 0 auto !important;
-            width: 190mm !important;
-            max-width: 190mm !important;
-            box-sizing: border-box !important;
-            box-shadow: none !important;
-            background-color: white !important;
-        }
+        .pdf-mode { padding: 5px 10px !important; margin: 0 auto !important; width: 190mm !important; max-width: 190mm !important; box-sizing: border-box !important; box-shadow: none !important; background-color: white !important; }
         .pdf-mode .header { margin-bottom: 5px !important; gap: 2px !important; }
         .pdf-mode #headerTitle { font-size: 1.2rem !important; margin: 0 !important; }
-        
         .pdf-mode .results-panel { margin-bottom: 8px !important; padding: 5px !important; border: 1px solid #d2d2d7 !important; }
         .pdf-mode .results-grid { margin-top: 2px !important; gap: 15px !important; font-size: 0.95rem !important; }
         .pdf-mode .score-final { font-size: 1.3rem !important; margin-top: 5px !important; }
-        
         .pdf-mode .exam-columns { gap: 10px !important; margin-bottom: 0 !important; }
         .pdf-mode .column { gap: 1px !important; }
         .pdf-mode .q-block { gap: 1px !important; padding-bottom: 1px !important; border-bottom: 1px solid #f2f2f7 !important;}
-        
         .pdf-mode .q-number { width: 22px !important; font-size: 0.8rem !important; }
         .pdf-mode .annul-label { width: 22px !important; font-size: 0.45rem !important; }
-        
         .pdf-mode .circle { width: 16px !important; height: 16px !important; font-size: 0.65rem !important; border-width: 1px !important; }
         .pdf-mode .annul-row .circle { width: 11px !important; height: 11px !important; font-size: 0.4rem !important; }
         .pdf-mode .options { gap: 2px !important; }
-
-        .pdf-mode .notes-container { 
-            display: block !important; 
-            margin-top: 30px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
-        .pdf-mode #printNotesDiv {
-            width: 100% !important;
-            box-sizing: border-box !important;
-            word-wrap: break-word !important;
-        }
-
+        .pdf-mode .notes-container { display: block !important; margin-top: 30px !important; width: 100% !important; box-sizing: border-box !important; }
+        .pdf-mode #printNotesDiv { width: 100% !important; box-sizing: border-box !important; word-wrap: break-word !important; }
         @media (max-width: 900px) { .exam-columns { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 500px) { .exam-columns { grid-template-columns: 1fr; } .container { padding: 15px; } .results-grid { flex-direction: column; gap: 5px;} }
     </style>
@@ -150,8 +91,6 @@
 <body>
 
     <div class="container" id="pdfExportArea">
-        
-        <!-- PÁGINA 1: Plantilla y Resultados -->
         <div id="page1Content">
             <div class="header">
                 <h2 id="headerTitle">Plantilla de Respuestas</h2>
@@ -159,7 +98,6 @@
                     <input type="text" id="examTitle" placeholder="Título de la plantilla...">
                     <input type="number" id="numQuestions" min="1" max="100" value="100" title="Número de preguntas del examen">
                     
-                    <!-- Botón oculto para procesar PDFs -->
                     <input type="file" id="pdfFileInput" accept="application/pdf" style="display: none;">
                     <button class="btn-import" id="importPdfBtn" title="Subir plantilla PDF de academia">
                         📄 Importar Soluciones
@@ -179,19 +117,15 @@
                 </div>
                 <div class="score-final" id="resScore">Nota: 0.00 / 10</div>
             </div>
-
             <div class="exam-columns" id="examColumns"></div>
         </div>
 
-        <!-- PÁGINA 2: Anotaciones -->
         <div id="notesContainer" class="notes-container">
             <div class="html2pdf__page-break"></div>
-            
             <h3 style="margin-bottom: 10px;">Apuntes y Correcciones</h3>
             <textarea id="examNotes" placeholder="Escribe aquí tus justificaciones, artículos del Código Penal, trucos para recordar, etc."></textarea>
         </div>
 
-        <!-- Controles -->
         <div class="controls" id="actionControls">
             <button class="btn-clear" id="clearBtn">Limpiar Todo</button>
             <button class="btn-calc" id="calcBtn" style="display: none;">Calcular Nota</button>
@@ -211,7 +145,6 @@
             const notesContainer = document.getElementById('notesContainer');
             const examNotes = document.getElementById('examNotes');
             
-            // Elementos para el PDF de soluciones
             const pdfFileInput = document.getElementById('pdfFileInput');
             const importPdfBtn = document.getElementById('importPdfBtn');
             
@@ -338,7 +271,7 @@
                 }
             }
             
-            // --- LÓGICA DE IMPORTACIÓN DEL PDF ---
+            // --- NUEVO MOTOR DE LECTURA PDF POR BLOQUES ---
             importPdfBtn.addEventListener('click', () => {
                 pdfFileInput.click();
             });
@@ -375,51 +308,82 @@
             });
 
             function procesarTextoPDF(texto) {
-                // Elimina acentos y caracteres basura dejando solo números y A, B, C
-                const cleanText = texto.toUpperCase().replace(/[^0-9A-C]/g, ' ').replace(/\s+/g, ' ').trim();
-                const tokens = cleanText.split(' ');
+                // Separamos el texto en palabras limpias
+                const words = texto.toUpperCase().replace(/\s+/g, ' ').split(' ');
+                let tokens = [];
                 
-                let numeros = [];
-                let letras = [];
-                
-                // Clasificamos lo encontrado en orden de lectura
-                tokens.forEach(t => {
-                    if (/^\d{1,3}$/.test(t)) {
-                        let num = parseInt(t);
-                        if (num >= 1 && num <= 100) numeros.push(num);
-                    } else if (/^[ABC]$/.test(t)) {
-                        letras.push(t);
-                    }
-                });
-
-                let nuevosOficiales = {};
-                let contadorMatches = 0;
-                
-                // Emparejamos. Si el formato cuadra, el índice N del array de números corresponde al N del de letras
-                const limite = Math.min(numeros.length, letras.length);
-                for(let i = 0; i < limite; i++) {
-                    if(numeros[i] >= 1 && numeros[i] <= 100) {
-                        nuevosOficiales[numeros[i]] = letras[i];
-                        contadorMatches++;
+                for (let word of words) {
+                    // Limpiamos la palabra de puntuación
+                    let cleanWord = word.replace(/[^0-9A-Z]/g, '');
+                    if (!cleanWord) continue;
+                    
+                    if (/^\d{1,3}$/.test(cleanWord)) {
+                        let n = parseInt(cleanWord);
+                        if (n >= 1 && n <= 100) tokens.push({ type: 'NUM', val: n });
+                    } else if (/^[ABC]+$/.test(cleanWord)) {
+                        // Solo procesa palabras que sean ESTRICTAMENTE combinaciones de A, B y C
+                        for (let char of cleanWord) {
+                            tokens.push({ type: 'LET', val: char });
+                        }
                     }
                 }
 
-                if (contadorMatches > 0) {
-                    savedState.official = nuevosOficiales;
+                let result = {};
+                let currentNumbers = [];
+                let currentLetters = [];
+                let lastType = null;
+
+                function processBlock() {
+                    // Empareja el bloque almacenado
+                    if (currentLetters.length > 0 && currentNumbers.length > 0) {
+                        const N = currentLetters.length;
+                        // Coge los últimos N números para descartar basura de la cabecera
+                        const matchedNums = currentNumbers.slice(-N);
+                        
+                        for (let j = 0; j < Math.min(N, matchedNums.length); j++) {
+                            if (matchedNums[j] >= 1 && matchedNums[j] <= 100) {
+                                result[matchedNums[j]] = currentLetters[j];
+                            }
+                        }
+                    }
+                }
+
+                // Recorre los tokens identificando los cambios de fila
+                for (let i = 0; i < tokens.length; i++) {
+                    let t = tokens[i];
+                    if (t.type === 'NUM') {
+                        if (lastType === 'LET') {
+                            processBlock();
+                            currentNumbers = [];
+                            currentLetters = [];
+                        }
+                        currentNumbers.push(t.val);
+                        lastType = 'NUM';
+                    } else if (t.type === 'LET') {
+                        currentLetters.push(t.val);
+                        lastType = 'LET';
+                    }
+                }
+                processBlock(); // Procesa el último bloque residual
+
+                let totalMatches = Object.keys(result).length;
+
+                if (totalMatches > 0) {
+                    savedState.official = result;
                     saveToLocal();
                     renderUI();
                     
                     if (!isCorrectionMode) {
-                        modeToggle.click(); // Cambia al modo corrección solo
+                        modeToggle.click();
                     } else {
-                        calcBtn.click(); // Recalcula si ya estabas en modo corrección
+                        calcBtn.click(); 
                     }
-                    alert(`✅ ¡Plantilla procesada! Se han detectado e importado ${contadorMatches} respuestas oficiales.`);
+                    alert(`✅ ¡Plantilla procesada! Se han detectado e importado ${totalMatches} respuestas oficiales.`);
                 } else {
                     alert('❌ No se ha podido reconocer el formato. Asegúrate de que el PDF contiene el listado numérico.');
                 }
             }
-            // --- FIN LÓGICA DE IMPORTACIÓN ---
+            // --- FIN MOTOR DE LECTURA ---
 
             modeToggle.addEventListener('click', () => {
                 isCorrectionMode = !isCorrectionMode;
