@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plantilla de Examen - CNP</title>
-    
     <!-- Librería para exportar a PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
     <!-- Librería para LEER PDFs (Mozilla pdf.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
-
     <style>
         :root {
             --primary-color: #007aff;
@@ -25,7 +22,6 @@
             --border-color: #d2d2d7;
             --disabled-color: #e5e5ea;
         }
-
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 950px; background-color: var(--card-bg); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); box-sizing: border-box; }
         .header { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 20px; }
@@ -33,24 +29,20 @@
         input[type="text"] { flex-grow: 1; min-width: 200px; font-size: 1.1rem; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; transition: border-color 0.2s; }
         input[type="number"] { width: 70px; font-size: 1.1rem; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; text-align: center; outline: none; }
         input:focus { border-color: var(--primary-color); }
-        
         .btn-import { background-color: #ff9500; color: white; padding: 8px 15px; font-size: 0.95rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; gap: 5px; }
         .btn-import:hover { background-color: #e58600; }
-        
         .mode-banner { width: 100%; max-width: 500px; padding: 8px; border-radius: 8px; text-align: center; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; background-color: var(--primary-color); color: white; }
         .mode-banner.correction-active { background-color: #5856d6; }
         .results-panel { display: none; background-color: #f2f2f7; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; border: 2px solid #e5e5ea; }
         .results-panel.show { display: block; }
         .results-grid { display: flex; justify-content: center; gap: 25px; margin-top: 10px; font-size: 1.05rem; }
         .score-final { font-size: 1.8rem; font-weight: 700; color: var(--primary-color); margin-top: 10px; }
-        
         .exam-columns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
         .column { display: flex; flex-direction: column; gap: 8px; }
         .q-block { display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px; border-bottom: 1px solid #f0f0f0; }
         .question-row { display: flex; align-items: center; justify-content: space-between; }
         .q-number { font-weight: 700; font-size: 0.95rem; width: 30px; }
         .annul-label { font-size: 0.6rem; font-weight: 600; color: var(--annul-color); width: 30px; letter-spacing: -0.5px; }
-        
         .options { display: flex; gap: 5px; }
         .circle { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: var(--border-color); cursor: pointer; user-select: none; transition: all 0.2s ease; background-color: white; }
         .circle:hover:not(.disabled) { border-color: #999; color: #999; }
@@ -61,12 +53,10 @@
         .circle.is-correct { background-color: var(--correct-color) !important; border-color: var(--correct-color) !important; color: white !important; }
         .circle.is-wrong { background-color: var(--annul-color) !important; border-color: var(--annul-color) !important; color: white !important; }
         .circle.is-official-target { background-color: transparent !important; border-color: var(--correct-color) !important; color: var(--correct-color) !important; border-width: 3px !important; }
-        
         .notes-container { display: none; width: 100%; margin-top: 30px; box-sizing: border-box; }
         .notes-container.show { display: block; }
         textarea { width: 100%; min-height: 400px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; font-family: inherit; resize: vertical; box-sizing: border-box; outline: none; background-color: #fafafa; }
         textarea:focus { border-color: var(--primary-color); }
-        
         .controls { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
         button { padding: 12px 24px; font-size: 1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
         .btn-clear { background-color: #ff3b30; color: white; }
@@ -74,8 +64,6 @@
         .btn-calc { background-color: #34c759; color: white; }
         .btn-calc:hover { background-color: #248a3d; }
         .btn-save { background-color: var(--text-color); color: white; }
-        
-        /* MODO PDF RESTRINGIDO MATEMÁTICAMENTE (190mm) */
         .pdf-mode { padding: 5px 10px !important; margin: 0 auto !important; width: 190mm !important; max-width: 190mm !important; box-sizing: border-box !important; box-shadow: none !important; background-color: white !important; }
         .pdf-mode .header { margin-bottom: 5px !important; gap: 2px !important; }
         .pdf-mode #headerTitle { font-size: 1.2rem !important; margin: 0 !important; }
@@ -92,13 +80,11 @@
         .pdf-mode .options { gap: 2px !important; }
         .pdf-mode .notes-container { display: block !important; margin-top: 30px !important; width: 100% !important; box-sizing: border-box !important; }
         .pdf-mode #printNotesDiv { width: 100% !important; box-sizing: border-box !important; word-wrap: break-word !important; }
-        
         @media (max-width: 900px) { .exam-columns { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 500px) { .exam-columns { grid-template-columns: 1fr; } .container { padding: 15px; } .results-grid { flex-direction: column; gap: 5px;} }
     </style>
 </head>
 <body>
-
     <div class="container" id="pdfExportArea">
         <div id="page1Content">
             <div class="header">
@@ -108,7 +94,7 @@
                     <input type="number" id="numQuestions" min="1" max="100" value="100" title="Número de preguntas del examen">
                     
                     <input type="file" id="pdfFileInput" accept="application/pdf" style="display: none;">
-                    <button class="btn-import" id="importPdfBtn" title="Subir plantilla PDF de academia">
+                    <button class="btn-import" id="importPdfBtn" title="Subir plantilla PDF de retroalimentación">
                         📄 Importar Soluciones
                     </button>
                 </div>
@@ -116,7 +102,6 @@
                     Modo: Realizando Examen (Pulsa para corregir)
                 </div>
             </div>
-
             <div id="resultsPanel" class="results-panel">
                 <h3 style="margin-top: 0; margin-bottom: 5px;">Resultados del Examen</h3>
                 <div class="results-grid">
@@ -126,23 +111,19 @@
                 </div>
                 <div class="score-final" id="resScore">Nota: 0.00 / 10</div>
             </div>
-
             <div class="exam-columns" id="examColumns"></div>
         </div>
-
         <div id="notesContainer" class="notes-container">
             <div class="html2pdf__page-break"></div>
             <h3 style="margin-bottom: 10px;">Apuntes y Correcciones</h3>
             <textarea id="examNotes" placeholder="Escribe aquí tus justificaciones, artículos del Código Penal, trucos para recordar, etc."></textarea>
         </div>
-
         <div class="controls" id="actionControls">
             <button class="btn-clear" id="clearBtn">Limpiar Todo</button>
             <button class="btn-calc" id="calcBtn" style="display: none;">Calcular Nota</button>
             <button class="btn-save" id="saveBtn">Descargar PDF</button>
         </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const totalQuestions = 100;
@@ -170,17 +151,14 @@
             if (savedState.title) titleInput.value = savedState.title;
             if (savedState.numQuestions) numQuestionsInput.value = savedState.numQuestions;
             if (savedState.notes) examNotes.value = savedState.notes;
-
             const cols = Array.from({length: 4}, () => {
                 let div = document.createElement('div');
                 div.className = 'column';
                 return div;
             });
-
             for (let i = 1; i <= totalQuestions; i++) {
                 const qBlock = document.createElement('div');
                 qBlock.className = 'q-block';
-
                 const mainRow = document.createElement('div');
                 mainRow.className = 'question-row main-row';
                 const number = document.createElement('div');
@@ -188,7 +166,6 @@
                 number.textContent = i;
                 const mainOptions = document.createElement('div');
                 mainOptions.className = 'options';
-
                 const annulRow = document.createElement('div');
                 annulRow.className = 'question-row annul-row';
                 const annulLabel = document.createElement('div');
@@ -196,9 +173,7 @@
                 annulLabel.textContent = 'ANULAR';
                 const annulOptions = document.createElement('div');
                 annulOptions.className = 'options';
-
                 if (!savedState.annulled[i]) savedState.annulled[i] = [];
-
                 ['A', 'B', 'C'].forEach(letter => {
                     const mainCircle = document.createElement('div');
                     mainCircle.className = `circle main-circle q${i}-${letter}`;
@@ -207,7 +182,6 @@
                     const annulCircle = document.createElement('div');
                     annulCircle.className = `circle annul-circle aq${i}-${letter}`;
                     annulCircle.textContent = letter;
-
                     mainCircle.addEventListener('click', () => {
                         if (isCorrectionMode) {
                             if (savedState.official[i] === letter) delete savedState.official[i];
@@ -221,7 +195,6 @@
                             renderUI();
                         }
                     });
-
                     annulCircle.addEventListener('click', () => {
                         if (isCorrectionMode) return; 
                         if (!savedState.annulled[i].includes(letter)) {
@@ -231,23 +204,18 @@
                             renderUI();
                         }
                     });
-
                     mainOptions.appendChild(mainCircle);
                     annulOptions.appendChild(annulCircle);
                 });
-
                 mainRow.append(number, mainOptions);
                 annulRow.append(annulLabel, annulOptions);
                 qBlock.append(mainRow, annulRow);
-
                 if (i <= 25) cols[0].appendChild(qBlock);
                 else if (i <= 50) cols[1].appendChild(qBlock);
                 else if (i <= 75) cols[2].appendChild(qBlock);
                 else cols[3].appendChild(qBlock);
             }
-
             cols.forEach(col => columnsContainer.appendChild(col));
-
             function renderUI() {
                 for (let i = 1; i <= totalQuestions; i++) {
                     ['A', 'B', 'C'].forEach(letter => {
@@ -256,16 +224,13 @@
                         
                         mCircle.classList.remove('selected', 'disabled', 'is-correct', 'is-wrong', 'is-official-target');
                         aCircle.classList.remove('annulled');
-
                         const isAnnulled = savedState.annulled[i].includes(letter);
                         const isUserAnswer = savedState.answers[i] === letter;
                         const isOfficialAnswer = savedState.official[i] === letter;
-
                         if (isAnnulled) {
                             mCircle.classList.add('disabled');
                             aCircle.classList.add('annulled');
                         }
-
                         if (!isCorrectionMode) {
                             if (isUserAnswer && !isAnnulled) mCircle.classList.add('selected');
                         } else {
@@ -281,32 +246,26 @@
                 }
             }
             
-            // --- NUEVO MOTOR DE LECTURA PDF POR BLOQUES INTELIGENTE ---
+            // --- NUEVO MOTOR DE LECTURA PDF POR PATRÓN EXPLÍCITO ---
             importPdfBtn.addEventListener('click', () => {
                 pdfFileInput.click();
             });
-
             pdfFileInput.addEventListener('change', async function(e) {
                 const file = e.target.files[0];
                 if (!file) return;
-
                 importPdfBtn.textContent = "⏳ Leyendo...";
                 importPdfBtn.disabled = true;
-
                 try {
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
                     let fullText = '';
-
                     for (let i = 1; i <= pdf.numPages; i++) {
                         const page = await pdf.getPage(i);
                         const textContent = await page.getTextContent();
                         const pageText = textContent.items.map(item => item.str).join(' ');
                         fullText += pageText + ' ';
                     }
-
                     procesarTextoPDF(fullText);
-
                 } catch (error) {
                     console.error(error);
                     alert("Error al leer el archivo PDF.");
@@ -316,93 +275,35 @@
                     pdfFileInput.value = ''; 
                 }
             });
-
             function procesarTextoPDF(texto) {
-                // 1. Separamos números y letras si el PDF los ha pegado por proximidad (ej. "25B" -> "25 B")
-                let safeText = texto.toUpperCase()
-                    .replace(/([0-9])([A-Z])/g, '$1 $2')
-                    .replace(/([A-Z])([0-9])/g, '$1 $2');
-                
-                // 2. Limpiamos cualquier símbolo de puntuación, salto de línea o tubería (|)
-                safeText = safeText.replace(/[^A-Z0-9]/g, ' ');
-                
-                // 3. Separamos por palabras reales
-                const words = safeText.split(/\s+/);
-                let tokens = [];
-                
-                for (let word of words) {
-                    if (!word) continue;
-                    
-                    if (/^\d{1,3}$/.test(word)) {
-                        let n = parseInt(word);
-                        if (n >= 1 && n <= 100) {
-                            tokens.push({ type: 'NUM', val: n });
-                        }
-                    } else if (/^[ABC]+$/.test(word)) {
-                        // Solo aceptamos palabras que sean 100% letras de opciones válidas, ignorando nombres o texto de cabecera
-                        for (let char of word) {
-                            tokens.push({ type: 'LET', val: char });
-                        }
+                // Rastrea específicamente la frase explícita de solución de los documentos Retro
+                const regex = /respuesta\s+correcta\s+es[:\s]*([A-C])/gi;
+                let match;
+                let nuevosOficiales = {};
+                let qNumber = 1;
+                while ((match = regex.exec(texto)) !== null) {
+                    if (qNumber <= 100) {
+                        nuevosOficiales[qNumber] = match[1].toUpperCase();
+                        qNumber++;
                     }
                 }
-
-                let result = {};
-                let currentNumbers = [];
-                let currentLetters = [];
-                let lastType = null;
-
-                // Función que empareja matemáticamente las listas cuando termina una fila
-                function processBlock() {
-                    if (currentLetters.length > 0 && currentNumbers.length > 0) {
-                        let N = currentLetters.length;
-                        // Toma exactamente la misma cantidad de números que de letras detectadas por el final
-                        let matchedNums = currentNumbers.slice(-N); 
-                        
-                        for (let j = 0; j < Math.min(N, matchedNums.length); j++) {
-                            let q = matchedNums[j];
-                            if (q >= 1 && q <= 100) {
-                                result[q] = currentLetters[j];
-                            }
-                        }
-                    }
-                }
-
-                // Analizamos el documento intercalando filas
-                for (let t of tokens) {
-                    if (t.type === 'NUM') {
-                        if (lastType === 'LET') {
-                            processBlock();
-                            currentNumbers = [];
-                            currentLetters = [];
-                        }
-                        currentNumbers.push(t.val);
-                        lastType = 'NUM';
-                    } else if (t.type === 'LET') {
-                        currentLetters.push(t.val);
-                        lastType = 'LET';
-                    }
-                }
-                processBlock(); // Remate de la última iteración
-
-                let totalMatches = Object.keys(result).length;
-
+                let totalMatches = Object.keys(nuevosOficiales).length;
                 if (totalMatches > 0) {
-                    savedState.official = result;
+                    savedState.official = nuevosOficiales;
                     saveToLocal();
                     renderUI();
                     
                     if (!isCorrectionMode) {
-                        modeToggle.click(); // Cambia al modo corrección solo
+                        modeToggle.click();
                     } else {
-                        calcBtn.click(); // Recalcula si ya estabas dentro
+                        calcBtn.click(); 
                     }
-                    alert(`✅ ¡Plantilla escaneada con éxito! Se han detectado e importado ${totalMatches} respuestas oficiales.`);
+                    alert(`✅ ¡Plantilla escaneada con éxito! Se han detectado e importado ${totalMatches} respuestas oficiales desde la retroalimentación.`);
                 } else {
-                    alert('❌ No se ha podido reconocer el formato numérico del PDF.');
+                    alert('❌ No se ha podido reconocer el formato. Asegúrate de que el PDF contiene la frase "La respuesta correcta es: [letra]".');
                 }
             }
             // --- FIN NUEVO MOTOR DE LECTURA ---
-
             modeToggle.addEventListener('click', () => {
                 isCorrectionMode = !isCorrectionMode;
                 if (isCorrectionMode) {
@@ -419,25 +320,20 @@
                 }
                 renderUI();
             });
-
             calcBtn.addEventListener('click', () => {
                 const limit = parseInt(numQuestionsInput.value) || 100;
                 let correct = 0, wrong = 0, blank = 0;
-
                 for (let i = 1; i <= limit; i++) {
                     const userAns = savedState.answers[i];
                     const offAns = savedState.official[i];
                     if (!offAns) { blank++; continue; }
-
                     if (userAns === offAns) correct++;
                     else if (userAns) wrong++;
                     else blank++;
                 }
-
                 let rawScore = correct - (wrong * 0.5);
                 let finalScore = (rawScore / limit) * 10;
                 if (finalScore < 0) finalScore = 0; 
-
                 document.getElementById('resCorrect').textContent = correct;
                 document.getElementById('resWrong').textContent = wrong;
                 document.getElementById('resBlank').textContent = blank;
@@ -446,13 +342,11 @@
                 resultsPanel.classList.add('show');
                 resultsPanel.scrollIntoView({ behavior: 'smooth' });
             });
-
             titleInput.addEventListener('input', () => { savedState.title = titleInput.value; saveToLocal(); });
             numQuestionsInput.addEventListener('input', () => { savedState.numQuestions = numQuestionsInput.value; saveToLocal(); });
             examNotes.addEventListener('input', () => { savedState.notes = examNotes.value; saveToLocal(); });
             
             function saveToLocal() { localStorage.setItem('plantillaOposicion', JSON.stringify(savedState)); }
-
             document.getElementById('clearBtn').addEventListener('click', () => {
                 if(confirm('¿Limpiar toda la plantilla? Se borrarán tus respuestas, apuntes y la corrección oficial.')) {
                     savedState = { title: titleInput.value, numQuestions: numQuestionsInput.value, answers: {}, annulled: {}, official: {}, notes: '' };
@@ -462,7 +356,6 @@
                     renderUI();
                 }
             });
-
             document.getElementById('saveBtn').addEventListener('click', () => {
                 window.scrollTo(0, 0);
                 
@@ -479,7 +372,6 @@
                 
                 const currentTitle = titleHeading.textContent;
                 titleHeading.textContent = titleInput.value || 'Plantilla de Examen';
-
                 const wasNotesVisible = notesContainer.classList.contains('show');
                 notesContainer.style.display = 'block';
                 notesContainer.classList.add('show');
@@ -498,7 +390,6 @@
                 
                 examNotes.style.display = 'none';
                 notesContainer.appendChild(printNotesDiv);
-
                 setTimeout(() => {
                     const opt = {
                         margin:       [5, 5, 5, 5],
@@ -507,7 +398,6 @@
                         html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 800 }, 
                         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
-
                     html2pdf().set(opt).from(element).save().then(() => {
                         element.classList.remove('pdf-mode');
                         controls.style.display = 'flex';
@@ -525,7 +415,6 @@
                     });
                 }, 150); 
             });
-
             renderUI();
         });
     </script>
